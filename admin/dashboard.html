@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Quickbit</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+        }
+        .admin-header {
+            background: #1e293b;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .logo span { color: #ef4444; }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            background: #ef4444;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #ef4444;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 5px solid;
+        }
+        .stat-card.users { border-left-color: #3b82f6; }
+        .stat-card.workers { border-left-color: #10b981; }
+        .stat-card.bookings { border-left-color: #f59e0b; }
+        .stat-card.revenue { border-left-color: #8b5cf6; }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #1e293b;
+        }
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 12px 25px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .tab-btn.active {
+            background: #ef4444;
+            color: white;
+        }
+        .data-table {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #f8fafc;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .status-active { background: #d1fae5; color: #065f46; }
+        .status-inactive { background: #fee2e2; color: #991b1b; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 3px;
+        }
+        .action-view { background: #3b82f6; color: white; }
+        .action-delete { background: #ef4444; color: white; }
+        .action-edit { background: #10b981; color: white; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        .sos-alert {
+            border-left: 5px solid #ef4444;
+            background: #fff5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        .sos-alert strong {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div class="logo">Quickbit<span>Admin</span></div>
+        <div class="nav-links">
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <button class="btn-outline" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <main class="container">
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+            <div class="stat-card users">
+                <i class="fas fa-users" style="color: #3b82f6;"></i>
+                <div class="stat-value" id="totalUsers">0</div>
+                <p>Total Users</p>
+            </div>
+            <div class="stat-card workers">
+                <i class="fas fa-briefcase" style="color: #10b981;"></i>
+                <div class="stat-value" id="totalWorkers">0</div>
+                <p>Active Workers</p>
+            </div>
+            <div class="stat-card bookings">
+                <i class="fas fa-calendar-check" style="color: #f59e0b;"></i>
+                <div class="stat-value" id="totalBookings">0</div>
+                <p>Total Bookings</p>
+            </div>
+            <div class="stat-card revenue">
+                <i class="fas fa-rupee-sign" style="color: #8b5cf6;"></i>
+                <div class="stat-value" id="totalRevenue">₹0</div>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+
+        <!-- Admin Tabs -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="switchTab('users')">👥 Users</button>
+            <button class="tab-btn" onclick="switchTab('workers')">👷 Workers</button>
+            <button class="tab-btn" onclick="switchTab('bookings')">📅 Bookings</button>
+            <button class="tab-btn" onclick="switchTab('sos')">🚨 SOS Alerts</button>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="usersTab" class="data-table">
+            <h3>Manage Users</h3>
+            <div id="usersTable">Loading...</div>
+        </div>
+
+        <!-- Workers Tab -->
+        <div id="workersTab" style="display: none;" class="data-table">
+            <h3>Manage Workers</h3>
+            <div id="workersTable">Loading...</div>
+        </div>
+
+        <!-- Bookings Tab -->
+        <div id="bookingsTab" style="display: none;" class="data-table">
+            <h3>All Bookings</h3>
+            <div id="bookingsTable">Loading...</div>
+        </div>
+
+        <!-- SOS Alerts Tab -->
+        <div id="sosTab" style="display: none;" class="data-table">
+            <h3>🚨 Emergency SOS Alerts</h3>
+            <div id="sosTable">Loading...</div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        
+        // Check admin auth
+        if (localStorage.getItem('adminAuth') !== 'true') {
+            window.location.href = 'index.html';
+        }
+
+        window.onload = function() {
+            loadStats();
+            loadUsers();
+            loadWorkers();
+            loadBookings();
+            loadSOSAlerts();
+        };
+
+       async function loadStats() {
+    try {
+        const usersRes = await fetch(`${API_URL}/users`);
+        const users = await usersRes.json();
+        
+        const workersRes = await fetch(`${API_URL}/workers`);
+        const workers = await workersRes.json();
+        
+        const bookingsRes = await fetch(`${API_URL}/bookings`);
+        const bookings = await bookingsRes.json();
+        
+        // Count only users with role 'user'
+        const totalUsers = users.filter(u => u.role === 'user').length;
+        // Count only users with role 'worker'
+        const totalWorkers = users.filter(u => u.role === 'worker').length;
+        
+        const totalRevenue = bookings.reduce((sum, b) => sum + (b.amount || 0), 0);
+        
+        document.getElementById('totalUsers').textContent = totalUsers;
+        document.getElementById('totalWorkers').textContent = totalWorkers;
+        document.getElementById('totalBookings').textContent = bookings.length;
+        document.getElementById('totalRevenue').textContent = '₹' + totalRevenue;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+      async function loadUsers() {
+    try {
+        const res = await fetch(`${API_URL}/users`);
+        const allUsers = await res.json();
+        const users = allUsers.filter(u => u.role === 'user');
+        
+        let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Actions</th></tr></thead><tbody>`;
+        
+        users.forEach(user => {
+            html += `<tr>
+                <td>${user.id}</td>
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+                <td>${user.phone || 'N/A'}</td>
+                <td>${user.role}</td>
+                <td><button onclick="deleteUser(${user.id})">Delete</button></td>
+            </tr>`;
+        });
+        
+        html += `</tbody></table>`;
+        document.getElementById('usersTable').innerHTML = html;
+    } catch (error) {
+        document.getElementById('usersTable').innerHTML = 'Error loading users';
+    }
+}
+
+async function loadWorkers() {
+    try {
+        const res = await fetch(`${API_URL}/users`);
+        const allUsers = await res.json();
+        const workers = allUsers.filter(u => u.role === 'worker');
+        
+        let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Actions</th></tr></thead><tbody>`;
+        
+        workers.forEach(worker => {
+            html += `<tr>
+                <td>${worker.id}</td>
+                <td>${worker.name}</td>
+                <td>${worker.email}</td>
+                <td>${worker.phone || 'N/A'}</td>
+                <td>${worker.role}</td>
+                <td><button onclick="deleteUser(${worker.id})">Delete</button></td>
+            </tr>`;
+        });
+        
+        html += `</tbody></table>`;
+        document.getElementById('workersTable').innerHTML = html;
+    } catch (error) {
+        document.getElementById('workersTable').innerHTML = 'Error loading workers';
+    }
+}
+        async function loadBookings() {
+            try {
+                const res = await fetch(`${API_URL}/bookings`);
+                const bookings = await res.json();
+                
+                const html = `
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Customer</th><th>Worker</th><th>Service</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            ${bookings.map(booking => `
+                                <tr>
+                                    <td>${booking.id}</td>
+                                    <td>${booking.user_name || 'N/A'}</td>
+                                    <td>${booking.worker_name || 'Not Assigned'}</td>
+                                    <td>${booking.service_name || 'Service'}</td>
+                                    <td>${booking.date || 'N/A'}</td>
+                                    <td>₹${booking.amount || 0}</td>
+                                    <td><span class="status-badge status-${booking.status}">${booking.status || 'pending'}</span></td>
+                                    <td>
+                                        <button class="action-btn action-view" onclick="viewBooking(${booking.id})">View</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                document.getElementById('bookingsTable').innerHTML = html;
+            } catch (error) {
+                document.getElementById('bookingsTable').innerHTML = '<div class="loading">Error loading bookings</div>';
+            }
+        }
+
+        async function loadSOSAlerts() {
+            try {
+                const res = await fetch(`${API_URL}/sos-alerts`);
+                const alerts = await res.json();
+                
+                if (alerts.length === 0) {
+                    document.getElementById('sosTable').innerHTML = '<div class="loading">No SOS alerts</div>';
+                    return;
+                }
+                
+                const html = alerts.map(alert => `
+                    <div class="sos-alert">
+                        <strong>🚨 SOS ALERT</strong><br>
+                        Worker: ${alert.worker_name}<br>
+                        Time: ${new Date(alert.created_at).toLocaleString()}<br>
+                        Location: ${alert.latitude || 'Unknown'}, ${alert.longitude || 'Unknown'}<br>
+                        Status: <span class="status-badge status-active">${alert.status}</span>
+                    </div>
+                `).join('');
+                document.getElementById('sosTable').innerHTML = html;
+            } catch (error) {
+                document.getElementById('sosTable').innerHTML = '<div class="loading">No SOS alerts yet</div>';
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('usersTab').style.display = 'none';
+            document.getElementById('workersTab').style.display = 'none';
+            document.getElementById('bookingsTab').style.display = 'none';
+            document.getElementById('sosTab').style.display = 'none';
+            
+            document.getElementById(tab + 'Tab').style.display = 'block';
+            
+            if (tab === 'sos') {
+                loadSOSAlerts();
+            }
+        }
+
+        function viewUser(id) { alert('View User ID: ' + id); }
+        function viewWorker(id) { alert('View Worker ID: ' + id); }
+        function viewBooking(id) { alert('View Booking ID: ' + id); }
+
+        async function deleteUser(id) {
+            if (confirm('Delete this user?')) {
+                await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
+                loadUsers();
+                loadStats();
+                alert('User deleted');
+            }
+        }
+
+        async function deleteWorker(id) {
+            if (confirm('Delete this worker?')) {
+                await fetch(`${API_URL}/workers/${id}`, { method: 'DELETE' });
+                loadWorkers();
+                loadStats();
+                alert('Worker deleted');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminAuth');
+            window.location.href = 'index.html';
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html>

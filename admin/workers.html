@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Workers - Admin</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Same styles as users.html plus additional worker-specific styles */
+        .rating-stars {
+            color: #fbbf24;
+        }
+        
+        .profession-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .worker-verification {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #10b981;
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <i class="fas fa-shield-alt" style="color: #ef4444; font-size: 24px;"></i>
+            <h2>Quickbit Admin</h2>
+        </div>
+        <div class="admin-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="users.html">Users</a>
+            <a href="workers.html" class="active">Workers</a>
+            <a href="bookings.html">Bookings</a>
+            <a href="reports.html">Reports</a>
+        </div>
+        <div>
+            <span>Admin</span>
+            <button class="btn btn-outline" style="margin-left: 20px;" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Worker Management</h1>
+            <button class="export-btn" onclick="exportWorkers()">
+                <i class="fas fa-download"></i> Export Workers
+            </button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <i class="fas fa-briefcase" style="color: #3b82f6;"></i>
+                <div class="stat-value" id="totalWorkers">0</div>
+                <p>Total Workers</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                <div class="stat-value" id="verifiedWorkers">0</div>
+                <p>Verified</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-clock" style="color: #f59e0b;"></i>
+                <div class="stat-value" id="pendingVerification">0</div>
+                <p>Pending Verification</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-rupee-sign" style="color: #8b5cf6;"></i>
+                <div class="stat-value" id="totalPayouts">₹0</div>
+                <p>Total Payouts</p>
+            </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="search-section">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search workers..." onkeyup="searchWorkers()">
+            </div>
+            <select class="filter-select" id="professionFilter" onchange="filterWorkers()">
+                <option value="all">All Professions</option>
+                <option value="cleaning">Cleaner</option>
+                <option value="plumbing">Plumber</option>
+                <option value="electrical">Electrician</option>
+                <option value="painting">Painter</option>
+                <option value="beauty">Beauty</option>
+            </select>
+            <select class="filter-select" id="verificationFilter" onchange="filterWorkers()">
+                <option value="all">All Status</option>
+                <option value="verified">Verified</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Rejected</option>
+            </select>
+        </div>
+
+        <!-- Workers Table -->
+        <div class="data-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Worker</th>
+                        <th>Profession</th>
+                        <th>Experience</th>
+                        <th>Rate/hr</th>
+                        <th>Rating</th>
+                        <th>Jobs</th>
+                        <th>Earnings</th>
+                        <th>Status</th>
+                        <th>Verification</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="workersTableBody">
+                    <!-- Data from JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        // Check admin auth
+        if (localStorage.getItem('adminAuth') !== 'true') {
+            window.location.href = 'index.html';
+        }
+
+        let allWorkers = [];
+
+        window.onload = function() {
+            loadWorkers();
+        };
+
+        function loadWorkers() {
+            const workers = JSON.parse(localStorage.getItem('workers')) || [];
+            const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            const earnings = JSON.parse(localStorage.getItem('earnings')) || {};
+            
+            allWorkers = workers.map(worker => {
+                const workerBookings = bookings.filter(b => b.workerId === worker.id && b.status === 'completed');
+                const totalEarnings = workerBookings.reduce((sum, b) => sum + (b.totalAmount * 0.8 || 0), 0);
+                
+                return {
+                    ...worker,
+                    completedJobs: workerBookings.length,
+                    totalEarnings: totalEarnings,
+                    verificationStatus: worker.verified ? 'verified' : (worker.verificationPending ? 'pending' : 'rejected')
+                };
+            });
+
+            updateStats();
+            displayWorkers();
+        }
+
+        function updateStats() {
+            const total = allWorkers.length;
+            const verified = allWorkers.filter(w => w.verificationStatus === 'verified').length;
+            const pending = allWorkers.filter(w => w.verificationStatus === 'pending').length;
+            const totalPayouts = allWorkers.reduce((sum, w) => sum + w.totalEarnings, 0);
+
+            document.getElementById('totalWorkers').textContent = total;
+            document.getElementById('verifiedWorkers').textContent = verified;
+            document.getElementById('pendingVerification').textContent = pending;
+            document.getElementById('totalPayouts').textContent = '₹' + totalPayouts;
+        }
+
+        function displayWorkers() {
+            const tbody = document.getElementById('workersTableBody');
+            
+            tbody.innerHTML = allWorkers.map(worker => `
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #10b981; color: white; display: flex; align-items: center; justify-content: center;">
+                                ${worker.name.charAt(0)}
+                            </div>
+                            <div>
+                                <strong>${worker.name}</strong>
+                                ${worker.verificationStatus === 'verified' ? 
+                                    '<span class="worker-verification"><i class="fas fa-check"></i></span>' : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="profession-badge">${worker.profession}</span></td>
+                    <td>${worker.experience} years</td>
+                    <td>₹${worker.hourlyRate}/hr</td>
+                    <td>
+                        <span class="rating-stars">${'★'.repeat(Math.floor(worker.rating || 0))}</span>
+                        ${worker.rating ? worker.rating.toFixed(1) : 'New'}
+                    </td>
+                    <td>${worker.completedJobs}</td>
+                    <td>₹${worker.totalEarnings}</td>
+                    <td>
+                        <span class="status-badge status-${worker.available ? 'active' : 'inactive'}">
+                            ${worker.available ? 'Available' : 'Busy'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${worker.verificationStatus}">
+                            ${worker.verificationStatus}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn view" onclick="viewWorker('${worker.id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn edit" onclick="verifyWorker('${worker.id}')">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="action-btn delete" onclick="suspendWorker('${worker.id}')">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function viewWorker(workerId) {
+            const worker = allWorkers.find(w => w.id === workerId);
+            alert(`
+                Worker Details:
+                Name: ${worker.name}
+                Profession: ${worker.profession}
+                Experience: ${worker.experience} years
+                Rate: ₹${worker.hourlyRate}/hr
+                Skills: ${worker.skills?.join(', ')}
+                Rating: ${worker.rating || 'New'}
+                Jobs Completed: ${worker.completedJobs}
+                Total Earnings: ₹${worker.totalEarnings}
+            `);
+        }
+
+        function verifyWorker(workerId) {
+            if (confirm('Verify this worker?')) {
+                let workers = JSON.parse(localStorage.getItem('workers')) || [];
+                const index = workers.findIndex(w => w.id === workerId);
+                if (index !== -1) {
+                    workers[index].verified = true;
+                    workers[index].verificationPending = false;
+                    localStorage.setItem('workers', JSON.stringify(workers));
+                    loadWorkers();
+                    alert('Worker verified successfully');
+                }
+            }
+        }
+
+        function suspendWorker(workerId) {
+            if (confirm('Suspend this worker?')) {
+                alert('Worker suspended');
+            }
+        }
+
+        function exportWorkers() {
+            alert('Exporting workers data...');
+        }
+
+        function logout() {
+            localStorage.removeItem('adminAuth');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

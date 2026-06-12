@@ -1,0 +1,194 @@
+<!-- pages/profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Profile - Quickbit</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .profile-header {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 16px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+        }
+        
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .stat-card {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 12px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        .service-option {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .service-option:hover, .service-option.popular {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+        
+        .popular-badge {
+            background: var(--secondary);
+            color: var(--white);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        .review-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../index.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../index.html">Home</a>
+            <a href="cleaners.html">Cleaners</a>
+            <a href="#">Services</a>
+            <a href="#">Contact</a>
+            <button class="btn btn-primary">Sign In</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Worker Profile -->
+        <div class="profile-header">
+            <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap;">
+                <div>
+                    <h1>Sarah Johnson</h1>
+                    <p style="color: var(--gray); margin: 5px 0;">Professional Cleaner + 5+ Years Exp</p>
+                    <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                        <span class="rating">
+                            <i class="fas fa-star" style="color: #fbbf24;"></i>
+                            <i class="fas fa-star" style="color: #fbbf24;"></i>
+                            <i class="fas fa-star" style="color: #fbbf24;"></i>
+                            <i class="fas fa-star" style="color: #fbbf24;"></i>
+                            <i class="fas fa-star-half-alt" style="color: #fbbf24;"></i>
+                        </span>
+                        <span>4.8 (124 Reviews)</span>
+                    </div>
+                </div>
+                <button class="btn btn-outline" onclick="location.href='schedule.html'">Schedule Now</button>
+            </div>
+            
+            <!-- Stats -->
+            <div class="profile-stats">
+                <div class="stat-card">
+                    <div class="stat-value">150+</div>
+                    <div class="stat-label">JOBS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">5 Years</div>
+                    <div class="stat-label">EXPENSES</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">98%</div>
+                    <div class="stat-label">SUCCESS</div>
+                </div>
+            </div>
+            
+            <!-- About -->
+            <div style="margin: 30px 0;">
+                <h3>About Me</h3>
+                <p style="color: var(--gray); line-height: 1.6; margin-top: 10px;">
+                    Professional cleaner with 5+ years of experience in residential and commercial spaces. 
+                    Punctual, thorough, and dedicated to making your home sparkle. Specializing in eco-friendly 
+                    cleaning solutions.
+                </p>
+            </div>
+            
+            <!-- Service Options -->
+            <h3>Service Options</h3>
+            <div class="service-option popular">
+                <span class="popular-badge">MOST POPULAR</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <h4>Standard Cleaning</h4>
+                        <p style="color: var(--gray);">General dusting, mopping, and vacuuming of all accessible surfaces. Ideal for regular maintenance.</p>
+                        <span class="service-duration">2-3 Hours duration</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="price-tag">₹1,499</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="service-option">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <h4>Deep Cleaning</h4>
+                        <p style="color: var(--gray);">Intensive scrubbing, appliance cleaning, interior window cleaning, and full sanitization.</p>
+                        <span class="service-duration">5-6 Hours duration</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="price-tag">₹1,999</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Reviews -->
+            <div style="margin-top: 40px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Recent Reviews</h3>
+                    <a href="#" style="color: var(--primary);">View All →</a>
+                </div>
+                
+                <div class="review-card">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <strong>Rahul M.</strong>
+                        <span class="rating">★★★★★</span>
+                    </div>
+                    <p style="color: var(--gray);">Excellent service! Very thorough and professional. Will book again.</p>
+                    <span style="color: var(--gray); font-size: 12px;">2 days ago</span>
+                </div>
+                
+                <div class="review-card">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <strong>Priya K.</strong>
+                        <span class="rating">★★★★★</span>
+                    </div>
+                    <p style="color: var(--gray);">Sarah did an amazing job with deep cleaning. My house looks brand new!</p>
+                    <span style="color: var(--gray); font-size: 12px;">1 week ago</span>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - Quickbit</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .verify-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 400px;
+            text-align: center;
+        }
+        .otp-input {
+            font-size: 32px;
+            padding: 15px;
+            text-align: center;
+            letter-spacing: 10px;
+            width: 100%;
+            margin: 20px 0;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .resend {
+            background: transparent;
+            color: #2563eb;
+            border: 2px solid #2563eb;
+        }
+        .error { color: red; margin: 10px 0; }
+        .success { color: green; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="verify-card">
+        <h2>Verify Your Email</h2>
+        <p id="emailDisplay"></p>
+        <p style="color: #6b7280; margin: 10px 0;">Enter 6-digit OTP sent to your email</p>
+        
+        <input type="text" class="otp-input" id="otp" maxlength="6" placeholder="______">
+        
+        <div id="message"></div>
+        
+        <button onclick="verifyOTP()">Verify</button>
+        <button class="resend" onclick="resendOTP()">Resend OTP</button>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        const email = localStorage.getItem('pendingVerificationEmail');
+        
+        if (!email) {
+            window.location.href = 'login.html';
+        }
+        
+        document.getElementById('emailDisplay').innerHTML = `📧 ${email}`;
+        
+        async function verifyOTP() {
+            const otp = document.getElementById('otp').value;
+            
+            if (otp.length !== 6) {
+                document.getElementById('message').innerHTML = '<div class="error">Enter 6-digit OTP</div>';
+                return;
+            }
+            
+            const res = await fetch(`${API_URL}/verify-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                document.getElementById('message').innerHTML = '<div class="success">✅ Verified! Redirecting to login...</div>';
+                localStorage.removeItem('pendingVerificationEmail');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                document.getElementById('message').innerHTML = `<div class="error">❌ ${data.error}</div>`;
+            }
+        }
+        
+       async function resendOTP() {
+    const res = await fetch(`${API_URL}/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+        // Show OTP in popup alert
+        alert(`Your OTP is: ${data.otp}`);
+        document.getElementById('message').innerHTML = '<div class="success">✅ OTP sent! Check popup.</div>';
+    } else {
+        document.getElementById('message').innerHTML = '<div class="error">❌ Failed to send OTP</div>';
+    }
+}
+    </script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks - Quickbit Worker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+        }
+        .header {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 24px; font-weight: bold; color: #2563eb; text-decoration: none; }
+        .nav-links a { margin-left: 20px; text-decoration: none; color: #333; }
+        .btn-outline { background: transparent; border: 2px solid #2563eb; padding: 8px 20px; border-radius: 8px; cursor: pointer; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { color: white; margin: 30px 0; }
+        h2 { color: white; margin: 20px 0 10px; }
+        
+        .task-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 5px solid;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .task-pending { border-left-color: #f59e0b; }
+        .task-accepted { border-left-color: #3b82f6; }
+        .task-completed { border-left-color: #10b981; }
+        .task-cancelled { border-left-color: #ef4444; }
+        
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-accepted { background: #dbeafe; color: #1e40af; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-cancelled { background: #fee2e2; color: #991b1b; }
+        
+        .action-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+        }
+        .action-accept { background: #10b981; color: white; }
+        .action-start { background: #3b82f6; color: white; }
+        .action-complete { background: #8b5cf6; color: white; }
+        .action-complete:hover { background: #7c3aed; }
+        .action-cancel { background: #ef4444; color: white; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            background: white;
+            border-radius: 20px;
+        }
+        .earnings-popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            animation: slideIn 0.5s;
+            z-index: 1000;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .filter-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .filter-tab.active {
+            background: #2563eb;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../worker-dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../worker-dashboard.html">Dashboard</a>
+            <a href="worker-tasks.html" style="color: #2563eb;">My Tasks</a>
+            <a href="worker-earnings.html">Earnings</a>
+            <span id="workerName"></span>
+            <button class="btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1>My Tasks</h1>
+
+        <div class="filter-tabs">
+            <div class="filter-tab active" onclick="filterTasks('all')">All</div>
+            <div class="filter-tab" onclick="filterTasks('pending')">Pending</div>
+            <div class="filter-tab" onclick="filterTasks('accepted')">Accepted</div>
+            <div class="filter-tab" onclick="filterTasks('completed')">Completed</div>
+        </div>
+
+        <h2>📋 Pending Jobs</h2>
+        <div id="pendingJobs"></div>
+
+        <h2>✅ My Accepted Jobs</h2>
+        <div id="acceptedJobs"></div>
+
+        <h2>✓ Completed Jobs</h2>
+        <div id="completedJobs"></div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let currentWorker = null;
+        let allBookings = [];
+
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'worker') {
+            window.location.href = '../login.html';
+        }
+        document.getElementById('workerName').textContent = currentUser.name;
+
+        async function loadData() {
+            try {
+                // Get worker ID and details
+                const workersRes = await fetch(`${API_URL}/workers`);
+                const workers = await workersRes.json();
+                currentWorker = workers.find(w => w.user_id == currentUser.id);
+                
+                if (!currentWorker) return;
+                
+                // Get all bookings for this worker with customer details
+                const res = await fetch(`${API_URL}/bookings/worker/${currentWorker.id}`);
+                allBookings = await res.json();
+                
+                displayTasks();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function displayTasks() {
+            const pending = allBookings.filter(b => b.status === 'pending');
+            const accepted = allBookings.filter(b => b.status === 'accepted' || b.status === 'in-progress');
+            const completed = allBookings.filter(b => b.status === 'completed');
+            
+            document.getElementById('pendingJobs').innerHTML = pending.length === 0 ? 
+                '<div class="empty-state">No pending jobs</div>' :
+                pending.map(job => `
+                    <div class="task-card task-pending">
+                        <div>
+                            <h3>${job.service_name || 'Cleaning Service'}</h3>
+                            <p><i class="fas fa-user"></i> Customer: ${job.customer_name || 'Customer'}</p>
+                            <p><i class="fas fa-venus-mars"></i> Customer Gender: ${job.customer_gender || 'Not specified'}</p>
+                            <p><i class="fas fa-calendar"></i> ${job.date || 'Date TBD'} | ${job.time_slot || 'Time TBD'}</p>
+                            <p><i class="fas fa-map-marker-alt"></i> ${job.address || 'Address provided'}</p>
+                            <p>💰 Amount: ₹${job.amount || 0}</p>
+                        </div>
+                        <div>
+                            <span class="status-badge status-pending">PENDING</span>
+                            <div style="margin-top: 10px;">
+                                <button class="action-btn action-accept" onclick="updateStatus(${job.id}, 'accepted')">Accept</button>
+                                <button class="action-btn action-cancel" onclick="updateStatus(${job.id}, 'cancelled')">Decline</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            
+            document.getElementById('acceptedJobs').innerHTML = accepted.length === 0 ?
+                '<div class="empty-state">No accepted jobs</div>' :
+                accepted.map(job => `
+                    <div class="task-card task-accepted">
+                        <div>
+                            <h3>${job.service_name || 'Cleaning Service'}</h3>
+                            <p><i class="fas fa-user"></i> Customer: ${job.customer_name || 'Customer'}</p>
+                            <p><i class="fas fa-calendar"></i> ${job.date || 'Date TBD'} | ${job.time_slot || 'Time TBD'}</p>
+                            <p><i class="fas fa-map-marker-alt"></i> ${job.address || 'Address provided'}</p>
+                            <p>💰 Amount: ₹${job.amount || 0}</p>
+                            <p>Current Status: <strong>${job.status}</strong></p>
+                        </div>
+                        <div>
+                            <span class="status-badge status-accepted">${job.status.toUpperCase()}</span>
+                            <div style="margin-top: 10px;">
+                                ${job.status === 'accepted' ? 
+                                    `<button class="action-btn action-start" onclick="updateStatus(${job.id}, 'in-progress')">Start Job</button>` : ''}
+                                ${job.status === 'in-progress' ? 
+                                    `<button class="action-btn action-complete" onclick="updateStatus(${job.id}, 'completed')">Complete Job</button>` : ''}
+                                ${job.status === 'accepted' || job.status === 'in-progress' ?
+                                    `<button class="action-btn action-cancel" onclick="updateStatus(${job.id}, 'cancelled')">Cancel</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+            document.getElementById('completedJobs').innerHTML = completed.length === 0 ?
+                '<div class="empty-state">No completed jobs</div>' :
+                completed.map(job => `
+                    <div class="task-card task-completed">
+                        <div>
+                            <h3>${job.service_name || 'Cleaning Service'}</h3>
+                            <p><i class="fas fa-user"></i> Customer: ${job.customer_name || 'Customer'}</p>
+                            <p><i class="fas fa-calendar"></i> ${job.date || 'Date TBD'}</p>
+                            <p>💰 Amount: ₹${job.amount || 0}</p>
+                        </div>
+                        <div>
+                            <span class="status-badge status-completed">COMPLETED</span>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        // UPDATE STATUS WITH SAFETY CHECK FOR FEMALE WORKERS
+        async function updateStatus(bookingId, newStatus) {
+            // SAFETY CHECK: Only for accepting pending jobs
+            if (newStatus === 'accepted') {
+                try {
+                    // Get the booking details
+                    const booking = allBookings.find(b => b.id === bookingId);
+                    
+                    // Check if worker is female and customer is male
+                    if (currentWorker && currentWorker.gender === 'female' && booking && booking.customer_gender === 'male') {
+                        const confirmAccept = confirm('⚠️ SAFETY ALERT ⚠️\n\nYou are a female worker accepting a job at a MALE CUSTOMER\'s home.\n\n• Share your live location with a friend/family\n• Keep your phone accessible\n• If you feel unsafe, use SOS button\n\nDo you want to accept this job?');
+                        
+                        if (!confirmAccept) {
+                            return; // Don't accept the job
+                        }
+                        
+                        alert('✅ Safety acknowledged. Please ensure you share your location with an emergency contact.\n\nStay safe!');
+                    }
+                } catch (err) {
+                    console.error('Safety check error:', err);
+                }
+            }
+            
+            // Proceed with status update
+            try {
+                const response = await fetch(`${API_URL}/bookings/${bookingId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    let message = '';
+                    if (newStatus === 'accepted') message = '✅ Job accepted!';
+                    else if (newStatus === 'in-progress') message = '🔧 Job started! Complete when done.';
+                    else if (newStatus === 'completed') message = '🎉 Job completed! Payment credited.';
+                    else if (newStatus === 'cancelled') message = '❌ Job cancelled.';
+                    
+                    alert(message);
+                    loadData(); // Refresh the page
+                } else {
+                    alert('Failed to update status');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function showEarningsPopup() {
+            const popup = document.createElement('div');
+            popup.className = 'earnings-popup';
+            popup.innerHTML = '<i class="fas fa-rupee-sign"></i><h3>Earned!</h3><p>Payment added to your account</p>';
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 3000);
+        }
+
+        function filterTasks(filter) {
+            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (filter === 'pending') {
+                document.getElementById('pendingJobs').style.display = 'block';
+                document.getElementById('acceptedJobs').style.display = 'none';
+                document.getElementById('completedJobs').style.display = 'none';
+            } else if (filter === 'accepted') {
+                document.getElementById('pendingJobs').style.display = 'none';
+                document.getElementById('acceptedJobs').style.display = 'block';
+                document.getElementById('completedJobs').style.display = 'none';
+            } else if (filter === 'completed') {
+                document.getElementById('pendingJobs').style.display = 'none';
+                document.getElementById('acceptedJobs').style.display = 'none';
+                document.getElementById('completedJobs').style.display = 'block';
+            } else {
+                document.getElementById('pendingJobs').style.display = 'block';
+                document.getElementById('acceptedJobs').style.display = 'block';
+                document.getElementById('completedJobs').style.display = 'block';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '../login.html';
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

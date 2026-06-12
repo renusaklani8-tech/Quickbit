@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Quickbit</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-top: 5px solid #ef4444;
+        }
+        h2 {
+            text-align: center;
+            color: #1e293b;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>Admin Login</h2>
+        <form id="adminLoginForm">
+            <div class="form-group">
+                <input type="email" id="adminEmail" placeholder="Admin Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="adminPassword" placeholder="Password" required>
+            </div>
+            <button type="submit">Login</button>
+            <div id="errorMsg" class="error"></div>
+        </form>
+    </div>
+
+    <script>
+        // Admin credentials (in production, check from database)
+        const ADMIN_EMAIL = 'admin@quickbit.com';
+        const ADMIN_PASSWORD = 'admin123';
+
+        document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+
+            if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+                localStorage.setItem('adminAuth', 'true');
+                window.location.href = 'dashboard.html';
+            } else {
+                document.getElementById('errorMsg').innerHTML = 'Invalid admin credentials';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!-- pages/schedule.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Service - Quickbit</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .calendar {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: 600;
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+        
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        
+        .calendar-day {
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .calendar-day:hover {
+            background: var(--light);
+        }
+        
+        .calendar-day.selected {
+            background: var(--primary);
+            color: var(--white);
+        }
+        
+        .calendar-day.prev-month {
+            color: var(--gray);
+            opacity: 0.5;
+        }
+        
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .time-slot {
+            background: var(--white);
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .time-slot:hover, .time-slot.selected {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+        
+        .pricing-summary {
+            background: var(--white);
+            padding:

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Quickbit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h2 {
+            text-align: center;
+            color: #2563eb;
+            margin-bottom: 20px;
+        }
+        .role-selector {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .role-card {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .role-card.selected {
+            border-color: #2563eb;
+            background: #f0f9ff;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .link {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .link a {
+            color: #2563eb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .error-msg {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .worker-fields {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>Quickbit</h2>
+        
+        <div class="role-selector">
+            <div class="role-card selected" onclick="selectRole('user')">👤 User</div>
+            <div class="role-card" onclick="selectRole('worker')">👷 Worker</div>
+        </div>
+        
+        <input type="hidden" id="selectedRole" value="user">
+        
+        <!-- Login Form -->
+        <form id="loginForm">
+            <div class="form-group">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="loginPassword" placeholder="Password" required>
+            </div>
+            <button type="submit">Login</button>
+            <div class="link"><a onclick="showRegister()">Don't have an account? Register</a></div>
+            <div id="loginError" class="error-msg"></div>
+        </form>
+        
+        <!-- Register Form -->
+        <form id="registerForm" style="display:none">
+            <div class="form-group">
+                <input type="text" id="regName" placeholder="Full Name" required>
+            </div>
+            <div class="form-group">
+                <input type="email" id="regEmail" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="tel" id="regPhone" placeholder="Phone" required>
+            </div>
+            <div id="workerFields" class="worker-fields">
+                <div class="form-group">
+                    <select id="profession">
+                        <option value="">Select Profession</option>
+                        <option value="Cleaner">Cleaner</option>
+                        <option value="Plumber">Plumber</option>
+                        <option value="Electrician">Electrician</option>
+                    </select>
+                </div>
+                 <div class="form-group">
+        <select id="workerGender">
+            <option value="">Select Gender</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+        </select>
+    </div>
+                <div class="form-group">
+                    <input type="number" id="experience" placeholder="Years of Experience">
+                </div>
+                <div class="form-group">
+                    <input type="number" id="hourlyRate" placeholder="Hourly Rate (₹)">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="skills" placeholder="Skills (comma separated)">
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="password" id="regPassword" placeholder="Password" required>
+            </div>
+            <button type="submit">Register</button>
+            <div class="link"><a onclick="showLogin()">Already have an account? Login</a></div>
+            <div id="regError" class="error-msg"></div>
+        </form>
+    </div>
+
+   <script>
+    const API_URL = 'http://localhost:3000/api';
+
+    function selectRole(role) {
+        document.getElementById('selectedRole').value = role;
+        const userRole = document.querySelector('.role-card:first-child');
+        const workerRole = document.querySelector('.role-card:last-child');
+        
+        if (role === 'user') {
+            userRole.classList.add('selected');
+            workerRole.classList.remove('selected');
+            document.getElementById('workerFields').style.display = 'none';
+        } else {
+            workerRole.classList.add('selected');
+            userRole.classList.remove('selected');
+            document.getElementById('workerFields').style.display = 'block';
+        }
+    }
+
+    function showRegister() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'block';
+        document.getElementById('loginError').innerHTML = '';
+    }
+
+    function showLogin() {
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('regError').innerHTML = '';
+    }
+
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const role = document.getElementById('selectedRole').value;
+
+        try {
+            const res = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, role })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                if (role === 'user') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    window.location.href = 'worker-dashboard.html';
+                }
+            } else {
+                document.getElementById('loginError').innerHTML = data.error;
+            }
+        } catch (err) {
+            document.getElementById('loginError').innerHTML = 'Backend not running. Start with: node server.js';
+        }
+    });
+
+    // Register with Verification
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('regName').value;
+        const email = document.getElementById('regEmail').value;
+        const phone = document.getElementById('regPhone').value;
+        const password = document.getElementById('regPassword').value;
+        const role = document.getElementById('selectedRole').value;
+
+        let workerData = null;
+        if (role === 'worker') {
+            workerData = {
+                profession: document.getElementById('profession').value,
+                 gender: document.getElementById('workerGender').value, 
+                experience: document.getElementById('experience').value,
+                hourlyRate: document.getElementById('hourlyRate').value,
+                skills: document.getElementById('skills').value
+            };
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, phone, role, workerData })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                // Store email for OTP verification
+                localStorage.setItem('pendingVerificationEmail', email);
+                alert('Registration successful! Please verify your email.');
+                window.location.href = 'verify.html';
+            } else {
+                document.getElementById('regError').innerHTML = data.error;
+            }
+        } catch (err) {
+            document.getElementById('regError').innerHTML = 'Error connecting to server';
+        }
+    });
+</script>
+</body>
+</html>

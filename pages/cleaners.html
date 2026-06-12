@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Cleaners - Quickbit</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+        }
+        .header {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 24px; font-weight: bold; color: #2563eb; text-decoration: none; }
+        .nav-links a { margin-left: 20px; text-decoration: none; color: #333; }
+        .btn-outline { background: transparent; border: 2px solid #2563eb; padding: 8px 20px; border-radius: 8px; cursor: pointer; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { color: white; margin: 30px 0; }
+        .worker-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .worker-left {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex: 2;
+        }
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .worker-info h3 {
+            color: #1f2937;
+            margin-bottom: 5px;
+            font-size: 20px;
+        }
+        .worker-info p {
+            color: #4b5563;
+            margin: 5px 0;
+        }
+        .profession {
+            color: #10b981 !important;
+            font-weight: 600;
+        }
+        .skills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+        .skill-tag {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .rating {
+            color: #fbbf24;
+            margin: 5px 0;
+        }
+        .worker-right {
+            text-align: right;
+            flex: 1;
+        }
+        .price {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .price small {
+            font-size: 14px;
+            font-weight: normal;
+        }
+        .book-btn {
+            background: #2563eb;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .book-btn:hover {
+            background: #1d4ed8;
+        }
+        .empty {
+            text-align: center;
+            color: white;
+            padding: 50px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+        }
+        .loading {
+            text-align: center;
+            color: white;
+            padding: 50px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../dashboard.html" class="logo">Quickbit<span style="color:#10b981;">.</span></a>
+        <nav class="nav-links">
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="cleaners.html" style="color:#2563eb;">Find Cleaners</a>
+            <a href="bookings.html">My Bookings</a>
+            <span id="userName"></span>
+            <button class="btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1>Find Available Workers</h1>
+        <div id="workersList" class="loading">Loading workers from database...</div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        
+        // Check login
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = '../login.html';
+        }
+        document.getElementById('userName').textContent = currentUser.name;
+
+        async function loadWorkers() {
+            try {
+                console.log('Fetching workers from API...');
+                const response = await fetch(`${API_URL}/workers`);
+                const workers = await response.json();
+                
+                console.log('Workers from database:', workers);
+                
+                const container = document.getElementById('workersList');
+                
+                if (!workers || workers.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty">
+                            <h3>No Workers Available</h3>
+                            <p>Please register as a worker first.</p>
+                            <button onclick="location.href='../login.html'" style="margin-top:15px; padding:10px 20px; background:#2563eb; color:white; border:none; border-radius:8px; cursor:pointer;">Register as Worker</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Display each worker with all details
+                container.innerHTML = workers.map(worker => {
+                    // Parse skills if string, or use empty array
+                    let skillsArray = [];
+                    if (worker.skills) {
+                        if (typeof worker.skills === 'string') {
+                            skillsArray = worker.skills.split(',').map(s => s.trim());
+                        } else if (Array.isArray(worker.skills)) {
+                            skillsArray = worker.skills;
+                        }
+                    }
+                    
+                    return `
+                        <div class="worker-card">
+                            <div class="worker-left">
+                                <div class="avatar">${worker.name ? worker.name.charAt(0).toUpperCase() : 'W'}</div>
+                                <div class="worker-info">
+                                    <h3>${worker.name || 'Unknown Worker'}</h3>
+                                    <p class="profession">${worker.profession || 'Professional'} • ${worker.experience || 0} years experience</p>
+                                    <div class="skills">
+                                        ${skillsArray.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+                                        ${skillsArray.length === 0 ? '<span class="skill-tag">General</span>' : ''}
+                                    </div>
+                                    <div class="rating">
+                                        ${getStarRating(worker.rating || 0)} 
+                                        <span style="color:#6b7280;">(${worker.rating || 0} • ${worker.total_reviews || 0} reviews)</span>
+                                    </div>
+                                    <p style="color:#6b7280;"><i class="fas fa-briefcase"></i> ${worker.jobs || 0} jobs completed</p>
+                                </div>
+                            </div>
+                            <div class="worker-right">
+                                <div class="price">₹${worker.hourly_rate || 500}<small>/hr</small></div>
+                                <button class="book-btn" onclick="bookWorker(${worker.id}, '${worker.name}', ${worker.hourly_rate || 500})">
+                                    Book Now
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading workers:', error);
+                document.getElementById('workersList').innerHTML = `
+                    <div class="empty">
+                        <h3>Cannot Connect to Server</h3>
+                        <p>Make sure backend is running: <strong>node server.js</strong></p>
+                        <p style="color:#ef4444; margin-top:10px;">Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function getStarRating(rating) {
+            let stars = '';
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            
+            for (let i = 1; i <= 5; i++) {
+                if (i <= fullStars) {
+                    stars += '<i class="fas fa-star" style="color:#fbbf24;"></i>';
+                } else if (i === fullStars + 1 && hasHalfStar) {
+                    stars += '<i class="fas fa-star-half-alt" style="color:#fbbf24;"></i>';
+                } else {
+                    stars += '<i class="far fa-star" style="color:#fbbf24;"></i>';
+                }
+            }
+            return stars;
+        }
+
+        function bookWorker(id, name, rate) {
+            localStorage.setItem('selectedWorker', JSON.stringify({ id, name, rate }));
+            window.location.href = 'checkout.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '../login.html';
+        }
+
+        // Load workers when page opens
+        loadWorkers();
+    </script>
+</body>
+</html>

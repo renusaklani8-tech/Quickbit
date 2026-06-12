@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Service - Quickbit</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .rating-container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .worker-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .worker-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .rating-stars {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            font-size: 48px;
+            cursor: pointer;
+        }
+        
+        .rating-stars i {
+            color: #d1d5db;
+            transition: all 0.3s;
+        }
+        
+        .rating-stars i:hover,
+        .rating-stars i.active {
+            color: #fbbf24;
+            transform: scale(1.1);
+        }
+        
+        .rating-labels {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0 30px;
+            color: var(--gray);
+        }
+        
+        .review-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 16px;
+            resize: vertical;
+        }
+        
+        .photo-upload {
+            border: 2px dashed #e5e7eb;
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        
+        .photo-upload:hover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+        
+        .photo-preview {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .photo-preview img {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        
+        .rating-categories {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .category-tag {
+            padding: 10px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .category-tag.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .review-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .worker-response {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="cleaners.html">Find Cleaners</a>
+            <a href="bookings.html">My Bookings</a>
+            <span id="userName"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="rating-container">
+            <h2>Rate Your Service</h2>
+            <p style="color: var(--gray);">Your feedback helps us improve</p>
+            
+            <!-- Worker Info -->
+            <div class="worker-info" id="workerInfo">
+                <!-- Dynamic from URL -->
+            </div>
+            
+            <!-- Star Rating -->
+            <div class="rating-stars" id="starRating">
+                <i class="far fa-star" data-rating="1"></i>
+                <i class="far fa-star" data-rating="2"></i>
+                <i class="far fa-star" data-rating="3"></i>
+                <i class="far fa-star" data-rating="4"></i>
+                <i class="far fa-star" data-rating="5"></i>
+            </div>
+            
+            <div class="rating-labels">
+                <span>Poor</span>
+                <span>Fair</span>
+                <span>Good</span>
+                <span>Very Good</span>
+                <span>Excellent</span>
+            </div>
+            
+            <!-- Rating Categories -->
+            <h3>Rate Specifics</h3>
+            <div class="rating-categories">
+                <div class="category-tag" onclick="toggleCategory(this, 'Punctuality')">Punctuality</div>
+                <div class="category-tag" onclick="toggleCategory(this, 'Quality')">Quality</div>
+                <div class="category-tag" onclick="toggleCategory(this, 'Behavior')">Behavior</div>
+                <div class="category-tag" onclick="toggleCategory(this, 'Value')">Value for Money</div>
+                <div class="category-tag" onclick="toggleCategory(this, 'Cleanliness')">Cleanliness</div>
+                <div class="category-tag" onclick="toggleCategory(this, 'Equipment')">Equipment</div>
+            </div>
+            
+            <!-- Review Text -->
+            <h3>Write a Review</h3>
+            <textarea class="review-input" id="reviewText" rows="4" placeholder="Share your experience..."></textarea>
+            
+            <!-- Photo Upload -->
+            <h3>Add Photos (Optional)</h3>
+            <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+                <i class="fas fa-camera" style="font-size: 32px; color: var(--gray);"></i>
+                <p>Click to upload photos of the service</p>
+            </div>
+            <input type="file" id="photoInput" multiple accept="image/*" style="display: none;" onchange="previewPhotos()">
+            <div class="photo-preview" id="photoPreview"></div>
+            
+            <!-- Submit Button -->
+            <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="submitReview()">
+                Submit Review
+            </button>
+            
+            <!-- Previous Reviews -->
+            <h3 style="margin-top: 40px;">Previous Reviews</h3>
+            <div id="previousReviews"></div>
+        </div>
+    </main>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        let currentRating = 0;
+        let selectedCategories = [];
+        let bookingId = new URLSearchParams(window.location.search).get('booking');
+        let workerId = new URLSearchParams(window.location.search).get('worker');
+        
+        // Check authentication
+        if (!auth.isAuthenticated()) {
+            window.location.href = '../login.html';
+        }
+        
+        document.getElementById('userName').textContent = auth.currentUser.name;
+        
+        // Load booking/worker info
+        window.onload = function() {
+            loadWorkerInfo();
+            loadPreviousReviews();
+        };
+        
+        function loadWorkerInfo() {
+            const workers = JSON.parse(localStorage.getItem('workers')) || [];
+            const worker = workers.find(w => w.id === workerId);
+            
+            if (worker) {
+                document.getElementById('workerInfo').innerHTML = `
+                    <div class="worker-avatar">${worker.name.charAt(0)}</div>
+                    <div>
+                        <h3>${worker.name}</h3>
+                        <p>${worker.profession} • ${worker.experience} years exp</p>
+                        <p>Service: Home Deep Cleaning</p>
+                        <p>Date: ${new Date().toLocaleDateString()}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Star rating
+        document.querySelectorAll('#starRating i').forEach(star => {
+            star.addEventListener('mouseover', function() {
+                const rating = this.dataset.rating;
+                highlightStars(rating);
+            });
+            
+            star.addEventListener('mouseout', function() {
+                highlightStars(currentRating);
+            });
+            
+            star.addEventListener('click', function() {
+                currentRating = this.dataset.rating;
+                highlightStars(currentRating);
+            });
+        });
+        
+        function highlightStars(rating) {
+            document.querySelectorAll('#starRating i').forEach((star, index) => {
+                if (index < rating) {
+                    star.className = 'fas fa-star';
+                } else {
+                    star.className = 'far fa-star';
+                }
+            });
+        }
+        
+        function toggleCategory(element, category) {
+            element.classList.toggle('selected');
+            
+            if (selectedCategories.includes(category)) {
+                selectedCategories = selectedCategories.filter(c => c !== category);
+            } else {
+                selectedCategories.push(category);
+            }
+        }
+        
+        function previewPhotos() {
+            const input = document.getElementById('photoInput');
+            const preview = document.getElementById('photoPreview');
+            preview.innerHTML = '';
+            
+            for (let file of input.files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function submitReview() {
+            if (currentRating === 0) {
+                alert('Please select a rating');
+                return;
+            }
+            
+            const reviewText = document.getElementById('reviewText').value;
+            if (!reviewText) {
+                alert('Please write a review');
+                return;
+            }
+            
+            // Create review object
+            const review = {
+                id: Date.now(),
+                workerId: workerId,
+                userId: auth.currentUser.id,
+                userName: auth.currentUser.name,
+                rating: currentRating,
+                categories: selectedCategories,
+                text: reviewText,
+                date: new Date().toISOString(),
+                photos: [] // In real app, upload photos to server
+            };
+            
+            // Save to localStorage
+            let reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+            reviews.push(review);
+            localStorage.setItem('reviews', JSON.stringify(reviews));
+            
+            // Update worker rating
+            updateWorkerRating(workerId);
+            
+            alert('Thank you for your review!');
+            window.location.href = 'bookings.html';
+        }
+        
+        function updateWorkerRating(workerId) {
+            const reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+            const workerReviews = reviews.filter(r => r.workerId === workerId);
+            
+            if (workerReviews.length > 0) {
+                const avgRating = workerReviews.reduce((sum, r) => sum + parseFloat(r.rating), 0) / workerReviews.length;
+                
+                let workers = JSON.parse(localStorage.getItem('workers')) || [];
+                const workerIndex = workers.findIndex(w => w.id === workerId);
+                
+                if (workerIndex !== -1) {
+                    workers[workerIndex].rating = avgRating.toFixed(1);
+                    workers[workerIndex].totalReviews = workerReviews.length;
+                    localStorage.setItem('workers', JSON.stringify(workers));
+                }
+            }
+        }
+        
+        function loadPreviousReviews() {
+            const reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+            const workerReviews = reviews.filter(r => r.workerId === workerId).slice(0, 3);
+            
+            const container = document.getElementById('previousReviews');
+            
+            if (workerReviews.length === 0) {
+                container.innerHTML = '<p style="color: var(--gray);">No reviews yet</p>';
+                return;
+            }
+            
+            container.innerHTML = workerReviews.map(review => `
+                <div class="review-card">
+                    <div class="review-header">
+                        <strong>${review.userName}</strong>
+                        <div>${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</div>
+                    </div>
+                    <p>${review.text}</p>
+                    <p style="color: var(--gray); font-size: 12px;">${new Date(review.date).toLocaleDateString()}</p>
+                </div>
+            `).join('');
+        }
+        
+        function logout() {
+            auth.logout();
+        }
+    </script>
+</body>
+</html>

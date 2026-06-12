@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Quickbit</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .emergency-banner {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .emergency-banner:hover {
+            transform: scale(1.02);
+        }
+        
+        .quick-modules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .quick-module {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .quick-module:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .quick-module.emergency {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .dashboard-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .card-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .service-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .service-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2563eb;
+            margin: 15px 0;
+        }
+        
+        .badge {
+            background: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        
+        .book-btn {
+            background: #2563eb;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        .recent-bookings {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 40px 0;
+        }
+        
+        .booking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .status-pending { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+        .status-completed { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="pages/cleaners.html">Find Cleaners</a>
+            <a href="pages/bookings.html">My Bookings</a>
+            <a href="pages/offers.html">Offers</a>
+            <a href="pages/service-history.html">History</a>
+            <a href="pages/emergency.html" style="color: #ef4444;">🚨 Emergency</a>
+            <span id="userName"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div style="margin: 30px 0; color: white;">
+            <h1>Welcome back, <span id="welcomeName"></span>!</h1>
+            <p>Here's what's happening with your services today.</p>
+        </div>
+
+        <!-- Emergency Banner -->
+        <div class="emergency-banner" onclick="location.href='pages/emergency.html'">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 40px;"></i>
+                <div>
+                    <h2>🚨 Emergency Services 24/7</h2>
+                    <p>Immediate response within 30 minutes</p>
+                </div>
+            </div>
+            <button style="background: white; color: #ef4444; border: none; padding: 10px 30px; border-radius: 50px; font-weight: bold;">SOS</button>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="dashboard-grid">
+            <div class="dashboard-card" onclick="location.href='pages/bookings.html'">
+                <div class="card-icon"><i class="fas fa-calendar-check"></i></div>
+                <div class="card-number" id="activeBookings">0</div>
+                <h3>Active Bookings</h3>
+            </div>
+            <div class="dashboard-card" onclick="location.href='pages/cleaners.html'">
+                <div class="card-icon"><i class="fas fa-users"></i></div>
+                <div class="card-number" id="workerCount">0</div>
+                <h3>Available Cleaners</h3>
+            </div>
+            <div class="dashboard-card" onclick="location.href='pages/service-history.html'">
+                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                <div class="card-number" id="completedCount">0</div>
+                <h3>Completed Services</h3>
+            </div>
+            <div class="dashboard-card" onclick="location.href='pages/offers.html'">
+                <div class="card-icon"><i class="fas fa-tag"></i></div>
+                <div class="card-number">5</div>
+                <h3>Active Offers</h3>
+            </div>
+        </div>
+
+        <!-- Quick Access Modules (Removed Favorites & Notifications) -->
+        <h2 style="color: white; margin: 30px 0;">Quick Access</h2>
+        <div class="quick-modules">
+            <div class="quick-module" onclick="location.href='pages/offers.html'">
+                <i class="fas fa-tag" style="font-size: 32px; color: #f59e0b;"></i>
+                <h4>Offers</h4>
+                <p style="color: #6b7280;">Coupons & Deals</p>
+            </div>
+            <div class="quick-module" onclick="location.href='pages/service-history.html'">
+                <i class="fas fa-history" style="font-size: 32px; color: #3b82f6;"></i>
+                <h4>History</h4>
+                <p style="color: #6b7280;">Past Services</p>
+            </div>
+            <div class="quick-module" onclick="location.href='pages/services.html'">
+    <i class="fas fa-calendar-alt" style="font-size: 32px; color: #8b5cf6;"></i>
+    <h4>Schedule</h4>
+    <p style="color: #6b7280;">Plan Service</p>
+</div>
+            <div class="quick-module emergency" onclick="location.href='pages/emergency.html'">
+                <i class="fas fa-exclamation-circle" style="font-size: 32px;"></i>
+                <h4>Emergency</h4>
+                <p style="font-size: 12px;">24/7 Help</p>
+            </div>
+            <div class="quick-module" onclick="location.href='pages/edit-profile.html'">
+                <i class="fas fa-user-edit" style="font-size: 32px; color: #10b981;"></i>
+                <h4>Edit Profile</h4>
+                <p style="color: #6b7280;">Update Info</p>
+            </div>
+        </div>
+
+        <!-- Services -->
+        <h2 style="color: white; margin: 30px 0;">Popular Services</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <span class="badge">Popular</span>
+                <i class="fas fa-home" style="font-size: 40px; color: #2563eb; margin: 15px 0;"></i>
+                <h3>Home Deep Cleaning</h3>
+                <p class="service-price">₹2,999</p>
+                <button class="book-btn" onclick="bookService('Home Deep Cleaning')">Book Now</button>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-couch" style="font-size: 40px; color: #2563eb; margin: 15px 0;"></i>
+                <h3>Sofa Cleaning</h3>
+                <p class="service-price">₹1,499</p>
+                <button class="book-btn" onclick="bookService('Sofa Cleaning')">Book Now</button>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-wind" style="font-size: 40px; color: #2563eb; margin: 15px 0;"></i>
+                <h3>AC Cleaning</h3>
+                <p class="service-price">₹1,199</p>
+                <button class="book-btn" onclick="bookService('AC Cleaning')">Book Now</button>
+            </div>
+        </div>
+
+        <!-- Recent Bookings -->
+        <div class="recent-bookings">
+            <h2>Recent Bookings</h2>
+            <div id="recentBookings"></div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        
+        // Check if user is logged in
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+        
+        document.getElementById('userName').textContent = currentUser.name;
+        document.getElementById('welcomeName').textContent = currentUser.name.split(' ')[0];
+
+        // Fetch dashboard stats from database
+        async function loadDashboardStats() {
+            try {
+                // Get worker count
+                const workersRes = await fetch(`${API_URL}/workers`);
+                const workers = await workersRes.json();
+                document.getElementById('workerCount').textContent = workers.length;
+                
+                // Get user bookings
+                const bookingsRes = await fetch(`${API_URL}/bookings/user/${currentUser.id}`);
+                const bookings = await bookingsRes.json();
+                
+                const active = bookings.filter(b => b.status === 'pending' || b.status === 'accepted').length;
+                const completed = bookings.filter(b => b.status === 'completed').length;
+                
+                document.getElementById('activeBookings').textContent = active;
+                document.getElementById('completedCount').textContent = completed;
+                
+                // Display recent bookings
+                const recent = bookings.slice(0, 3);
+                const container = document.getElementById('recentBookings');
+                
+                if (recent.length > 0) {
+                    container.innerHTML = recent.map(b => `
+                        <div class="booking-item">
+                            <div>
+                                <h4>${b.service_name || 'Cleaning Service'}</h4>
+                                <p>${b.worker_name || 'Worker'} • ${b.date}</p>
+                            </div>
+                            <div>
+                                <span class="status-${b.status}">${b.status}</span>
+                                <p style="font-weight: bold;">₹${b.amount}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p style="color: #6b7280;">No recent bookings</p>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function bookService(serviceName) {
+            alert(`Booking ${serviceName}...`);
+            window.location.href = 'pages/checkout.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        }
+
+        // Load dashboard data
+        loadDashboardStats();
+    </script>
+</body>
+</html>

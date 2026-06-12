@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Earnings - Quickbit Worker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+        }
+        .header {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 24px; font-weight: bold; color: #2563eb; text-decoration: none; }
+        .nav-links a { margin-left: 20px; text-decoration: none; color: #333; }
+        .btn-outline { background: transparent; border: 2px solid #2563eb; padding: 8px 20px; border-radius: 8px; cursor: pointer; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        h1 { color: white; margin: 30px 0; }
+        
+        .earnings-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .earnings-amount {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        
+        .transaction-list {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+        }
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .transaction-amount {
+            font-weight: bold;
+            color: #10b981;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            background: white;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../worker-dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../worker-dashboard.html">Dashboard</a>
+            <a href="worker-tasks.html">My Tasks</a>
+            <a href="worker-earnings.html" style="color: #2563eb;">Earnings</a>
+            <span id="workerName"></span>
+            <button class="btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1>My Earnings</h1>
+
+        <div class="earnings-card">
+            <h3>Total Earnings</h3>
+            <div class="earnings-amount" id="totalEarnings">₹0</div>
+            <p>From completed jobs</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number" id="completedJobs">0</div>
+                <p>Jobs Completed</p>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="avgRating">0</div>
+                <p>Avg Rating</p>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="pendingAmount">₹0</div>
+                <p>Pending</p>
+            </div>
+        </div>
+
+        <div class="transaction-list">
+            <h3>Transaction History</h3>
+            <div id="transactions"></div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'worker') {
+            window.location.href = '../login.html';
+        }
+        document.getElementById('workerName').textContent = currentUser.name;
+
+        async function loadEarnings() {
+            try {
+                const workersRes = await fetch(`${API_URL}/workers`);
+                const workers = await workersRes.json();
+                const worker = workers.find(w => w.user_id == currentUser.id);
+                
+                if (!worker) return;
+                
+                const res = await fetch(`${API_URL}/bookings/worker/${worker.id}`);
+                const bookings = await res.json();
+                
+                const completedJobs = bookings.filter(b => b.status === 'completed');
+                const totalEarnings = completedJobs.reduce((sum, b) => sum + (b.amount || 0), 0);
+                
+                document.getElementById('totalEarnings').textContent = `₹${totalEarnings}`;
+                document.getElementById('completedJobs').textContent = completedJobs.length;
+                document.getElementById('avgRating').textContent = worker.rating || '4.5';
+                document.getElementById('pendingAmount').textContent = `₹${worker.pending || 0}`;
+                
+                const transactionsDiv = document.getElementById('transactions');
+                if (completedJobs.length === 0) {
+                    transactionsDiv.innerHTML = '<div class="empty-state">No transactions yet</div>';
+                } else {
+                    transactionsDiv.innerHTML = completedJobs.map(job => `
+                        <div class="transaction-item">
+                            <div>
+                                <strong>${job.service_name || 'Service'}</strong>
+                                <p style="color: #6b7280; font-size: 12px;">${job.date} • ${job.time_slot}</p>
+                            </div>
+                            <div class="transaction-amount">+₹${job.amount || 0}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '../login.html';
+        }
+
+        loadEarnings();
+    </script>
+</body>
+</html>

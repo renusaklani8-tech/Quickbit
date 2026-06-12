@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - Quickbit</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .bookings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            color: white;
+        }
+        
+        .booking-tabs {
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .tab.active {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .bookings-list {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            min-height: 400px;
+        }
+        
+        .booking-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            margin: 15px 0;
+            transition: all 0.3s;
+        }
+        
+        .booking-card:hover {
+            transform: translateX(10px);
+            border-color: #2563eb;
+        }
+        
+        .booking-status {
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-confirmed { background: #d1fae5; color: #065f46; }
+        .status-completed { background: #dbeafe; color: #1e40af; }
+        .status-cancelled { background: #fee2e2; color: #991b1b; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+        
+        .empty-state i {
+            font-size: 80px;
+            color: #e5e7eb;
+            margin-bottom: 20px;
+        }
+        
+        .booking-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #2563eb;
+            color: #2563eb;
+        }
+        
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="cleaners.html">Find Cleaners</a>
+            <a href="bookings.html" style="color: #2563eb;">My Bookings</a>
+            <span id="userName"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="bookings-header">
+            <h1>My Bookings</h1>
+            <button class="btn btn-primary" onclick="location.href='cleaners.html'">
+                <i class="fas fa-plus"></i> New Booking
+            </button>
+        </div>
+        
+        <div class="booking-tabs">
+            <div class="tab active" onclick="filterBookings('all')">All</div>
+            <div class="tab" onclick="filterBookings('pending')">Pending</div>
+            <div class="tab" onclick="filterBookings('confirmed')">Confirmed</div>
+            <div class="tab" onclick="filterBookings('completed')">Completed</div>
+            <div class="tab" onclick="filterBookings('cancelled')">Cancelled</div>
+        </div>
+        
+        <div class="bookings-list" id="bookingsList">
+            <div style="text-align:center; padding:50px;">Loading bookings...</div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let currentFilter = 'all';
+        let allBookings = [];
+        
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = '../login.html';
+        }
+        
+        document.getElementById('userName').textContent = currentUser.name;
+        
+        async function loadBookings() {
+            try {
+                const response = await fetch(`${API_URL}/bookings/user/${currentUser.id}`);
+                const bookings = await response.json();
+                allBookings = bookings;
+                displayBookings();
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                document.getElementById('bookingsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-database"></i>
+                        <h3>Cannot connect to server</h3>
+                        <p>Make sure backend is running</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayBookings() {
+            const filtered = currentFilter === 'all' ? allBookings : allBookings.filter(b => b.status === currentFilter);
+            const container = document.getElementById('bookingsList');
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No bookings found</h3>
+                        <p>Ready to book your first service?</p>
+                        <button class="btn btn-primary" onclick="location.href='cleaners.html'">
+                            Find Cleaners
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filtered.map(booking => `
+                <div class="booking-card">
+                    <div style="flex: 2;">
+                        <h3>${booking.service_name || 'Cleaning Service'}</h3>
+                        <p style="color: #6b7280; margin: 5px 0;">
+                            <i class="fas fa-user"></i> Worker ID: ${booking.worker_id || 'Not assigned'}
+                        </p>
+                        <p style="color: #6b7280;">
+                            <i class="fas fa-calendar"></i> ${booking.date || 'Date TBD'} | 
+                            <i class="fas fa-clock"></i> ${booking.time_slot || 'Time TBD'}
+                        </p>
+                        <p style="color: #6b7280;">
+                            <i class="fas fa-map-marker-alt"></i> ${booking.address || 'Address not provided'}
+                        </p>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div class="booking-status status-${booking.status}">
+                            ${(booking.status || 'PENDING').toUpperCase()}
+                        </div>
+                        <p style="font-weight: bold; margin-top: 10px;">₹${booking.amount || 0}</p>
+                    </div>
+                    <div class="booking-actions">
+                        ${booking.status === 'pending' ? `
+                            <button class="btn-small btn-outline" onclick="cancelBooking(${booking.id})">
+                                Cancel
+                            </button>
+                        ` : ''}
+                        <button class="btn-small btn-primary" onclick="viewDetails(${booking.id})">
+                            Details
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterBookings(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            displayBookings();
+        }
+        
+        async function cancelBooking(bookingId) {
+            if (confirm('Are you sure you want to cancel this booking?')) {
+                try {
+                    await fetch(`${API_URL}/bookings/${bookingId}/status`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: 'cancelled' })
+                    });
+                    alert('Booking cancelled');
+                    loadBookings();
+                } catch (error) {
+                    alert('Error cancelling booking');
+                }
+            }
+        }
+        
+        function viewDetails(bookingId) {
+            const booking = allBookings.find(b => b.id === bookingId);
+            if (booking) {
+                alert(`Booking Details:\n
+                    Service: ${booking.service_name}\n
+                    Date: ${booking.date}\n
+                    Time: ${booking.time_slot}\n
+                    Status: ${booking.status}\n
+                    Amount: ₹${booking.amount}\n
+                    Address: ${booking.address}
+                `);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '../login.html';
+        }
+        
+        loadBookings();
+    </script>
+</body>
+</html>

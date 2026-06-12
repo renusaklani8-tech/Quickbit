@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Admin</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .admin-header {
+            background: #1e293b;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .admin-nav {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .admin-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+        
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            background: #334155;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .search-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .search-box {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .search-box input {
+            border: none;
+            background: transparent;
+            margin-left: 10px;
+            outline: none;
+            width: 100%;
+        }
+        
+        .filter-select {
+            padding: 10px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+            margin: 10px 0;
+        }
+        
+        .data-table {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #f8fafc;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 3px;
+        }
+        
+        .action-btn.view { background: #3b82f6; color: white; }
+        .action-btn.edit { background: #10b981; color: white; }
+        .action-btn.delete { background: #ef4444; color: white; }
+        .action-btn.block { background: #f59e0b; color: white; }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .page-btn {
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .page-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        
+        .user-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .user-modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .export-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <i class="fas fa-shield-alt" style="color: #ef4444; font-size: 24px;"></i>
+            <h2>Quickbit Admin</h2>
+        </div>
+        <div class="admin-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="users.html" class="active">Users</a>
+            <a href="workers.html">Workers</a>
+            <a href="bookings.html">Bookings</a>
+            <a href="reports.html">Reports</a>
+        </div>
+        <div>
+            <span>Admin</span>
+            <button class="btn btn-outline" style="margin-left: 20px;" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>User Management</h1>
+            <button class="export-btn" onclick="exportUsers()">
+                <i class="fas fa-download"></i> Export Users
+            </button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <i class="fas fa-users" style="color: #3b82f6;"></i>
+                <div class="stat-value" id="totalUsers">0</div>
+                <p>Total Users</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-user-check" style="color: #10b981;"></i>
+                <div class="stat-value" id="activeUsers">0</div>
+                <p>Active Today</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-calendar-check" style="color: #f59e0b;"></i>
+                <div class="stat-value" id="newUsers">0</div>
+                <p>New This Month</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-rupee-sign" style="color: #8b5cf6;"></i>
+                <div class="stat-value" id="userSpent">₹0</div>
+                <p>Total Spent</p>
+            </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="search-section">
+            <div class="search-box">
+                <i class="fas fa-search" style="color: #9ca3af;"></i>
+                <input type="text" id="searchInput" placeholder="Search by name, email, phone..." onkeyup="searchUsers()">
+            </div>
+            <select class="filter-select" id="statusFilter" onchange="filterUsers()">
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="blocked">Blocked</option>
+            </select>
+            <select class="filter-select" id="dateFilter" onchange="filterUsers()">
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+            </select>
+        </div>
+
+        <!-- Users Table -->
+        <div class="data-table">
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Contact</th>
+                        <th>Joined</th>
+                        <th>Bookings</th>
+                        <th>Spent</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- Data from JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div class="user-modal" id="userModal">
+        <div class="modal-content">
+            <h2>User Details</h2>
+            <div id="userDetails"></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="editUser()">Edit User</button>
+                <button class="btn btn-outline" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        let currentPage = 1;
+        let usersPerPage = 10;
+        let allUsers = [];
+
+        // Check admin auth
+        if (localStorage.getItem('adminAuth') !== 'true') {
+            window.location.href = 'index.html';
+        }
+
+        // Load users on page load
+        window.onload = function() {
+            loadUsers();
+        };
+
+     // In admin/users.html - Update loadUsers function
+function loadUsers() {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+    
+    allUsers = users.map(user => {
+        const userBookings = bookings.filter(b => b.userId === user.id);
+        const totalSpent = userBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+        
+        return {
+            ...user,
+            bookingCount: userBookings.length,
+            totalSpent: totalSpent,
+            // Show role badge
+            roleDisplay: user.role === 'worker' ? '👷 Worker' : '👤 User'
+        };
+    });
+
+    updateStats();
+    displayUsers();
+}
+
+// Update table to show role
+function displayUsers() {
+    const tbody = document.getElementById('usersTableBody');
+    
+    tbody.innerHTML = allUsers.map(user => `
+        <tr>
+            <td>${user.id}</td>
+            <td>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: ${user.role === 'worker' ? '#10b981' : '#2563eb'}; color: white; display: flex; align-items: center; justify-content: center;">
+                        ${user.name.charAt(0)}
+                    </div>
+                    <div>
+                        <strong>${user.name}</strong><br>
+                        <small style="color: #6b7280;">${user.email}</small>
+                    </div>
+                </div>
+            </td>
+            <td>${user.phone || 'N/A'}</td>
+            <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+            <td>${user.bookingCount}</td>
+            <td>₹${user.totalSpent}</td>
+            <td>
+                <span class="status-badge" style="background: ${user.role === 'worker' ? '#d1fae5' : '#dbeafe'}; color: ${user.role === 'worker' ? '#065f46' : '#1e40af'};">
+                    ${user.role || 'user'}
+                </span>
+            </td>
+            <td>
+                <button class="action-btn view" onclick="viewUser('${user.id}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn edit" onclick="editUser('${user.id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+        function updateStats() {
+            const today = new Date().toDateString();
+            const thisMonth = new Date().getMonth();
+            
+            const activeToday = allUsers.filter(u => {
+                const lastActive = new Date(u.lastActive || u.createdAt).toDateString();
+                return lastActive === today;
+            }).length;
+
+            const newThisMonth = allUsers.filter(u => {
+                const joinMonth = new Date(u.createdAt).getMonth();
+                return joinMonth === thisMonth;
+            }).length;
+
+            const totalSpent = allUsers.reduce((sum, u) => sum + u.totalSpent, 0);
+
+            document.getElementById('totalUsers').textContent = allUsers.length;
+            document.getElementById('activeUsers').textContent = activeToday;
+            document.getElementById('newUsers').textContent = newThisMonth;
+            document.getElementById('userSpent').textContent = '₹' + totalSpent;
+        }
+
+        function displayUsers() {
+            const start = (currentPage - 1) * usersPerPage;
+            const end = start + usersPerPage;
+            const paginatedUsers = allUsers.slice(start, end);
+
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = paginatedUsers.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #2563eb; color: white; display: flex; align-items: center; justify-content: center;">
+                                ${user.name.charAt(0)}
+                            </div>
+                            <div>
+                                <strong>${user.name}</strong><br>
+                                <small style="color: #6b7280;">${user.email}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${user.phone || 'N/A'}</td>
+                    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td>${user.bookingCount}</td>
+                    <td>₹${user.totalSpent}</td>
+                    <td>
+                        <span class="status-badge status-${user.status}">
+                            ${user.status}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn view" onclick="viewUser('${user.id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn edit" onclick="editUser('${user.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn ${user.status === 'blocked' ? 'block' : 'delete'}" 
+                                onclick="toggleBlockUser('${user.id}')">
+                            <i class="fas ${user.status === 'blocked' ? 'fa-check' : 'fa-ban'}"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            setupPagination();
+        }
+
+        function setupPagination() {
+            const pageCount = Math.ceil(allUsers.length / usersPerPage);
+            let paginationHTML = '';
+            
+            for (let i = 1; i <= pageCount; i++) {
+                paginationHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" 
+                                   onclick="goToPage(${i})">${i}</button>`;
+            }
+            
+            document.getElementById('pagination').innerHTML = paginationHTML;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            displayUsers();
+        }
+
+        function searchUsers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (searchTerm === '') {
+                loadUsers();
+                return;
+            }
+
+            const filtered = allUsers.filter(user => 
+                user.name.toLowerCase().includes(searchTerm) ||
+                user.email.toLowerCase().includes(searchTerm) ||
+                (user.phone && user.phone.includes(searchTerm))
+            );
+
+            displayFilteredUsers(filtered);
+        }
+
+        function filterUsers() {
+            const status = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            let filtered = [...allUsers];
+            
+            if (status !== 'all') {
+                filtered = filtered.filter(u => u.status === status);
+            }
+            
+            if (dateFilter !== 'all') {
+                const now = new Date();
+                filtered = filtered.filter(u => {
+                    const joinDate = new Date(u.createdAt);
+                    if (dateFilter === 'today') {
+                        return joinDate.toDateString() === now.toDateString();
+                    } else if (dateFilter === 'week') {
+                        const weekAgo = new Date(now.setDate(now.getDate() - 7));
+                        return joinDate >= weekAgo;
+                    } else if (dateFilter === 'month') {
+                        return joinDate.getMonth() === now.getMonth();
+                    }
+                    return true;
+                });
+            }
+            
+            displayFilteredUsers(filtered);
+        }
+
+        function displayFilteredUsers(filtered) {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = filtered.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #2563eb; color: white; display: flex; align-items: center; justify-content: center;">
+                                ${user.name.charAt(0)}
+                            </div>
+                            <div>
+                                <strong>${user.name}</strong><br>
+                                <small style="color: #6b7280;">${user.email}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${user.phone || 'N/A'}</td>
+                    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td>${user.bookingCount}</td>
+                    <td>₹${user.totalSpent}</td>
+                    <td>
+                        <span class="status-badge status-${user.status}">
+                            ${user.status}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn view" onclick="viewUser('${user.id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn edit" onclick="editUser('${user.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn ${user.status === 'blocked' ? 'block' : 'delete'}" 
+                                onclick="toggleBlockUser('${user.id}')">
+                            <i class="fas ${user.status === 'blocked' ? 'fa-check' : 'fa-ban'}"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function viewUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            const modal = document.getElementById('userModal');
+            
+            document.getElementById('userDetails').innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: #2563eb; color: white; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto;">
+                        ${user.name.charAt(0)}
+                    </div>
+                    <h3 style="margin: 10px 0;">${user.name}</h3>
+                    <p style="color: #6b7280;">${user.email}</p>
+                </div>
+                
+                <div style="background: #f8fafc; padding: 20px; border-radius: 12px;">
+                    <p><strong>User ID:</strong> ${user.id}</p>
+                    <p><strong>Phone:</strong> ${user.phone || 'Not provided'}</p>
+                    <p><strong>Joined:</strong> ${new Date(user.createdAt).toLocaleString()}</p>
+                    <p><strong>Status:</strong> <span class="status-badge status-${user.status}">${user.status}</span></p>
+                    <p><strong>Total Bookings:</strong> ${user.bookingCount}</p>
+                    <p><strong>Total Spent:</strong> ₹${user.totalSpent}</p>
+                    <p><strong>Role:</strong> ${user.role || 'user'}</p>
+                    <p><strong>Last Active:</strong> ${user.lastActive ? new Date(user.lastActive).toLocaleString() : 'Never'}</p>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function editUser(userId) {
+            alert('Edit user functionality - Open edit form');
+        }
+
+        function toggleBlockUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            const action = user.status === 'blocked' ? 'unblock' : 'block';
+            
+            if (confirm(`Are you sure you want to ${action} this user?`)) {
+                let users = JSON.parse(localStorage.getItem('users')) || [];
+                const index = users.findIndex(u => u.id === userId);
+                
+                if (index !== -1) {
+                    users[index].status = user.status === 'blocked' ? 'active' : 'blocked';
+                    localStorage.setItem('users', JSON.stringify(users));
+                    loadUsers();
+                    alert(`User ${action}ed successfully`);
+                }
+            }
+        }
+
+        function exportUsers() {
+            const csv = convertToCSV(allUsers);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'users.csv';
+            a.click();
+        }
+
+        function convertToCSV(data) {
+            const headers = ['ID', 'Name', 'Email', 'Phone', 'Joined', 'Bookings', 'Spent', 'Status'];
+            const rows = data.map(u => [
+                u.id,
+                u.name,
+                u.email,
+                u.phone || '',
+                new Date(u.createdAt).toLocaleDateString(),
+                u.bookingCount,
+                u.totalSpent,
+                u.status
+            ]);
+            
+            return [headers, ...rows]
+                .map(row => row.join(','))
+                .join('\n');
+        }
+
+        function closeModal() {
+            document.getElementById('userModal').classList.remove('active');
+        }
+
+        function logout() {
+            localStorage.removeItem('adminAuth');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

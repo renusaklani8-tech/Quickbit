@@ -1,0 +1,375 @@
+<!-- pages/analytics.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Quickbit Worker</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analytics-container {
+            padding: 20px;
+        }
+        
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            color: white;
+        }
+        
+        .date-range {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .date-range input {
+            padding: 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .kpi-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 5px solid;
+        }
+        
+        .kpi-card.earnings { border-left-color: #10b981; }
+        .kpi-card.jobs { border-left-color: #3b82f6; }
+        .kpi-card.rating { border-left-color: #f59e0b; }
+        .kpi-card.hours { border-left-color: #8b5cf6; }
+        
+        .kpi-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .kpi-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+        
+        .performance-table {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #f8fafc;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .trend-up { color: #10b981; }
+        .trend-down { color: #ef4444; }
+        
+        .insights-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../worker-dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../worker-dashboard.html">Dashboard</a>
+            <a href="worker-tasks.html">Tasks</a>
+            <a href="worker-earnings.html">Earnings</a>
+            <a href="analytics.html" style="color: var(--primary);">Analytics</a>
+            <span id="workerName"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="analytics-container">
+            <div class="analytics-header">
+                <h1>Performance Analytics</h1>
+                <div class="date-range">
+                    <input type="date" id="startDate" onchange="updateAnalytics()">
+                    <span>to</span>
+                    <input type="date" id="endDate" onchange="updateAnalytics()">
+                    <button class="btn btn-primary" onclick="applyDateRange()">Apply</button>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card earnings">
+                    <i class="fas fa-rupee-sign"></i>
+                    <div class="kpi-value" id="totalEarnings">₹0</div>
+                    <div class="kpi-label">Total Earnings</div>
+                    <small id="earningsTrend" class="trend-up">↑ 12% vs last period</small>
+                </div>
+                <div class="kpi-card jobs">
+                    <i class="fas fa-briefcase"></i>
+                    <div class="kpi-value" id="totalJobs">0</div>
+                    <div class="kpi-label">Jobs Completed</div>
+                    <small id="jobsTrend">↑ 8% vs last period</small>
+                </div>
+                <div class="kpi-card rating">
+                    <i class="fas fa-star"></i>
+                    <div class="kpi-value" id="avgRating">4.8</div>
+                    <div class="kpi-label">Average Rating</div>
+                    <small id="ratingTrend">from 124 reviews</small>
+                </div>
+                <div class="kpi-card hours">
+                    <i class="fas fa-clock"></i>
+                    <div class="kpi-value" id="totalHours">0</div>
+                    <div class="kpi-label">Hours Worked</div>
+                    <small id="hoursTrend">Avg 4.2 hrs/day</small>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Earnings Overview</h3>
+                        <select onchange="updateEarningsChart(this.value)">
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="earningsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Jobs Performance</h3>
+                        <select onchange="updateJobsChart(this.value)">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="jobsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights Card -->
+            <div class="insights-card">
+                <h3>Performance Insights</h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;">
+                    <div>
+                        <p>Best Day</p>
+                        <h4 id="bestDay">Saturday</h4>
+                        <small>Avg ₹2,450</small>
+                    </div>
+                    <div>
+                        <p>Peak Hours</p>
+                        <h4 id="peakHours">10 AM - 2 PM</h4>
+                        <small>Most bookings</small>
+                    </div>
+                    <div>
+                        <p>Top Service</p>
+                        <h4 id="topService">Deep Cleaning</h4>
+                        <small>45% of jobs</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Performance Table -->
+            <div class="performance-table">
+                <h3>Job History Analysis</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Service</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Rating</th>
+                            <th>Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobHistoryTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        let earningsChart, jobsChart;
+        
+        if (!auth.isAuthenticated() || auth.currentUser.role !== 'worker') {
+            window.location.href = '../login.html';
+        }
+
+        document.getElementById('workerName').textContent = auth.currentUser.name;
+
+        window.onload = function() {
+            loadAnalytics();
+            createEarningsChart();
+            createJobsChart();
+            loadJobHistory();
+        };
+
+        function loadAnalytics() {
+            const workerId = auth.currentUser.id;
+            const earnings = JSON.parse(localStorage.getItem('earnings_' + workerId)) || {
+                total: 24500,
+                jobs: 47,
+                rating: 4.8,
+                hours: 156
+            };
+
+            document.getElementById('totalEarnings').textContent = '₹' + earnings.total;
+            document.getElementById('totalJobs').textContent = earnings.jobs || 47;
+            document.getElementById('avgRating').textContent = earnings.rating || 4.8;
+            document.getElementById('totalHours').textContent = earnings.hours || 156;
+        }
+
+        function createEarningsChart() {
+            const ctx = document.getElementById('earningsChart').getContext('2d');
+            
+            earningsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Earnings',
+                        data: [1200, 1900, 1500, 2100, 1800, 2400, 2100],
+                        borderColor: '#10b981',
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createJobsChart() {
+            const ctx = document.getElementById('jobsChart').getContext('2d');
+            
+            jobsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Jobs Completed',
+                        data: [12, 15, 18, 22],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function loadJobHistory() {
+            const history = [
+                { date: '2024-01-15', service: 'Deep Cleaning', customer: 'Priya S.', amount: 1200, rating: 5, feedback: 'Excellent work!' },
+                { date: '2024-01-14', service: 'AC Service', customer: 'Rahul V.', amount: 800, rating: 4, feedback: 'Good service' },
+                { date: '2024-01-13', service: 'Plumbing', customer: 'Ananya D.', amount: 1500, rating: 5, feedback: 'Very professional' },
+                { date: '2024-01-12', service: 'Electrical', customer: 'Vikram S.', amount: 600, rating: 4, feedback: 'On time' }
+            ];
+
+            const tbody = document.getElementById('jobHistoryTable');
+            tbody.innerHTML = history.map(job => `
+                <tr>
+                    <td>${job.date}</td>
+                    <td>${job.service}</td>
+                    <td>${job.customer}</td>
+                    <td>₹${job.amount}</td>
+                    <td>${'★'.repeat(job.rating)}${'☆'.repeat(5-job.rating)}</td>
+                    <td>${job.feedback}</td>
+                </tr>
+            `).join('');
+        }
+
+        function logout() {
+            auth.logout();
+        }
+    </script>
+</body>
+</html>

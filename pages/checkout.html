@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Quickbit</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .checkout-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .checkout-section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .booking-summary {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .summary-row.total {
+            font-weight: bold;
+            font-size: 20px;
+            color: var(--primary);
+            border-bottom: none;
+        }
+        
+        .payment-method {
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .payment-method:hover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+        
+        .payment-method.selected {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+        
+        .payment-method input[type="radio"] {
+            margin-right: 15px;
+        }
+        
+        .card-details {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .card-details.show {
+            display: block;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #2563eb;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .hours-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .hours-input input {
+            width: 100px;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="cleaners.html">Find Cleaners</a>
+            <a href="bookings.html">My Bookings</a>
+            <span id="userName" style="color: var(--primary);"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1 style="color: white; margin: 30px 0;">Checkout</h1>
+        
+        <div class="checkout-container">
+            <!-- Left Column - Booking Form -->
+            <div class="checkout-section">
+                <h2>Booking Details</h2>
+                
+                <div class="booking-summary" id="bookingSummary">
+                    <!-- Dynamic content from selected worker -->
+                </div>
+                
+                <div class="form-group">
+                    <label>Duration (Hours)</label>
+                    <div class="hours-input">
+                        <input type="number" id="hours" value="2" min="1" max="8" step="0.5" onchange="calculateTotal()">
+                        <span>hours</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Date</label>
+                    <input type="date" id="date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Time</label>
+                    <select id="timeSlot">
+                        <option>09:00 AM</option>
+                        <option>10:30 AM</option>
+                        <option>12:00 PM</option>
+                        <option>02:00 PM</option>
+                        <option>03:30 PM</option>
+                        <option>05:00 PM</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Service Address</label>
+                    <textarea id="address" rows="3" placeholder="Enter your complete address" required></textarea>
+                </div>
+                
+                <h2 style="margin-top: 30px;">Payment Method</h2>
+                
+                <div class="payment-method" onclick="selectPayment('credit')">
+                    <input type="radio" name="payment" id="creditCard" value="credit">
+                    <i class="fab fa-cc-visa" style="color: #1a1f71; font-size: 24px; margin-right: 10px;"></i>
+                    <strong>Credit Card</strong>
+                    
+                    <div class="card-details" id="creditCardDetails">
+                        <input type="text" placeholder="Card Number" class="form-control">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <input type="text" placeholder="MM/YY" class="form-control">
+                            <input type="text" placeholder="CVV" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="payment-method" onclick="selectPayment('upi')">
+                    <input type="radio" name="payment" id="upiPay" value="upi">
+                    <i class="fas fa-mobile-alt" style="font-size: 24px; margin-right: 10px;"></i>
+                    <strong>UPI Payment</strong>
+                </div>
+                
+                <button class="btn-primary" style="margin-top: 30px;" onclick="confirmBooking()">
+                    Confirm & Pay
+                </button>
+            </div>
+            
+            <!-- Right Column - Payment Summary -->
+            <div class="checkout-section">
+                <h2>Payment Summary</h2>
+                
+                <div class="booking-summary">
+                    <div class="summary-row">
+                        <span>Service Charge</span>
+                        <span id="serviceCharge">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>GST (18%)</span>
+                        <span id="gst">₹0</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total Amount</span>
+                        <span id="totalAmount">₹0</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn-outline" style="flex: 1;" onclick="location.href='cleaners.html'">
+                        ← Back
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        
+        // Get data from localStorage
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const selectedWorker = JSON.parse(localStorage.getItem('selectedWorker'));
+        
+        if (!currentUser) {
+            window.location.href = '../login.html';
+        }
+        
+        if (!selectedWorker) {
+            window.location.href = 'cleaners.html';
+        }
+        
+        let hourlyRate = selectedWorker.rate || 500;
+        
+        document.getElementById('userName').textContent = currentUser.name;
+        
+        // Display worker info
+        document.getElementById('bookingSummary').innerHTML = `
+            <div class="summary-row">
+                <span>Worker</span>
+                <span><strong>${selectedWorker.name}</strong></span>
+            </div>
+            <div class="summary-row">
+                <span>Hourly Rate</span>
+                <span>₹${hourlyRate}/hour</span>
+            </div>
+        `;
+        
+        // Set minimum date to today
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+        
+        function calculateTotal() {
+            const hours = parseFloat(document.getElementById('hours').value) || 0;
+            const serviceCharge = hours * hourlyRate;
+            const gst = serviceCharge * 0.18;
+            const total = serviceCharge + gst;
+            
+            document.getElementById('serviceCharge').textContent = `₹${serviceCharge}`;
+            document.getElementById('gst').textContent = `₹${Math.round(gst)}`;
+            document.getElementById('totalAmount').textContent = `₹${Math.round(total)}`;
+        }
+        
+        function selectPayment(type) {
+            document.getElementById('creditCardDetails').classList.remove('show');
+            
+            document.querySelectorAll('input[name="payment"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            if (type === 'credit') {
+                document.getElementById('creditCard').checked = true;
+                document.getElementById('creditCardDetails').classList.add('show');
+            } else if (type === 'upi') {
+                document.getElementById('upiPay').checked = true;
+            }
+        }
+        
+        async function confirmBooking() {
+            const hours = parseFloat(document.getElementById('hours').value);
+            const date = document.getElementById('date').value;
+            const timeSlot = document.getElementById('timeSlot').value;
+            const address = document.getElementById('address').value;
+            const paymentMethod = document.querySelector('input[name="payment"]:checked');
+            
+            if (!date) {
+                alert('Please select a date');
+                return;
+            }
+            
+            if (!address) {
+                alert('Please enter your address');
+                return;
+            }
+            
+            if (!paymentMethod) {
+                alert('Please select a payment method');
+                return;
+            }
+            
+            const serviceCharge = hours * hourlyRate;
+            const gst = serviceCharge * 0.18;
+            const total = Math.round(serviceCharge + gst);
+            
+            const bookingData = {
+                userId: currentUser.id,
+                workerId: selectedWorker.id,
+                serviceName: 'Cleaning Service',
+                amount: total,
+                date: date,
+                timeSlot: timeSlot,
+                address: address
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/bookings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ Booking Confirmed!\n\nWorker: ${selectedWorker.name}\nDate: ${date}\nTime: ${timeSlot}\nTotal: ₹${total}\n\nPayment Method: ${paymentMethod.value}`);
+                    
+                    // Clear selected worker from storage
+                    localStorage.removeItem('selectedWorker');
+                    
+                    // Redirect to bookings page
+                    window.location.href = 'bookings.html';
+                } else {
+                    alert('Booking failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error creating booking: ' + error.message);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '../login.html';
+        }
+        
+        // Calculate initial total
+        calculateTotal();
+    </script>
+</body>
+</html>

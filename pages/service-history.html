@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service History - Quickbit</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .history-container {
+            padding: 20px 0;
+        }
+        
+        .history-header {
+            color: white;
+            margin: 30px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-summary {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        
+        .history-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .history-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .service-badge {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .history-body {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .history-footer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .rebook-btn {
+            background: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            background: white;
+            border-radius: 20px;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            color: #e5e7eb;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="cleaners.html">Find Cleaners</a>
+            <a href="bookings.html">My Bookings</a>
+            <a href="service-history.html" style="color: var(--primary);">History</a>
+            <span id="userName"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="history-container">
+            <div class="history-header">
+                <h1>Service History</h1>
+            </div>
+
+            <!-- Stats Summary from REAL data -->
+            <div class="stats-summary" id="statsSummary">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalServices">0</div>
+                    <p>Total Services</p>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalSpent">₹0</div>
+                    <p>Total Spent</p>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="avgRating">0</div>
+                    <p>Avg Rating</p>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="thisMonth">0</div>
+                    <p>This Month</p>
+                </div>
+            </div>
+
+            <!-- Completed Bookings List -->
+            <div id="historyList"></div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = '../login.html';
+        }
+        
+        document.getElementById('userName').textContent = currentUser.name;
+        
+        async function loadHistory() {
+            try {
+                const response = await fetch(`${API_URL}/bookings/user/${currentUser.id}`);
+                const bookings = await response.json();
+                
+                // Filter only completed bookings
+                const completedBookings = bookings.filter(b => b.status === 'completed');
+                
+                // Calculate stats
+                const totalServices = completedBookings.length;
+                const totalSpent = completedBookings.reduce((sum, b) => sum + (b.amount || 0), 0);
+                const currentMonth = new Date().getMonth();
+                const thisMonthCount = completedBookings.filter(b => {
+                    const bookingDate = new Date(b.date);
+                    return bookingDate.getMonth() === currentMonth;
+                }).length;
+                
+                document.getElementById('totalServices').textContent = totalServices;
+                document.getElementById('totalSpent').textContent = `₹${totalSpent}`;
+                document.getElementById('avgRating').textContent = '4.5';
+                document.getElementById('thisMonth').textContent = thisMonthCount;
+                
+                // Display history
+                const container = document.getElementById('historyList');
+                
+                if (completedBookings.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-history"></i>
+                            <h3>No Service History</h3>
+                            <p>You haven't completed any services yet.</p>
+                            <button class="btn btn-primary" onclick="location.href='cleaners.html'">
+                                Book a Service
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = completedBookings.map(booking => `
+                    <div class="history-card">
+                        <div class="history-header-row">
+                            <span class="service-badge">Completed</span>
+                            <span>Booking #${booking.booking_id || booking.id}</span>
+                        </div>
+                        
+                        <div class="history-body">
+                            <div style="flex: 2;">
+                                <h4>${booking.service_name || 'Cleaning Service'}</h4>
+                                <p style="color: #6b7280; margin: 5px 0;">
+                                    <i class="fas fa-calendar"></i> ${booking.date || 'Date TBD'} | 
+                                    <i class="fas fa-clock"></i> ${booking.time_slot || 'Time TBD'}
+                                </p>
+                                <p style="color: #6b7280;">
+                                    <i class="fas fa-map-marker-alt"></i> ${booking.address || 'Address not provided'}
+                                </p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 20px; font-weight: bold; color: #2563eb;">₹${booking.amount || 0}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="history-footer">
+                            <div>
+                                <span class="rating">★★★★★</span>
+                                <span style="color: #6b7280; margin-left: 10px;">Completed</span>
+                            </div>
+                            <div>
+                                <button class="rebook-btn" onclick="rebook(${booking.id})">
+                                    <i class="fas fa-redo"></i> Rebook
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading history:', error);
+                document.getElementById('historyList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-database"></i>
+                        <h3>Cannot connect to server</h3>
+                        <p>Make sure backend is running</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function rebook(bookingId) {
+            alert(`Rebooking service...`);
+            window.location.href = 'cleaners.html';
+        }
+        
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '../login.html';
+        }
+        
+        loadHistory();
+    </script>
+</body>
+</html>

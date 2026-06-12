@@ -1,0 +1,386 @@
+<!-- pages/offers.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offers & Promotions - Quickbit</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .offers-container {
+            padding: 20px 0;
+        }
+        
+        .offers-header {
+            color: white;
+            margin: 30px 0;
+        }
+        
+        .coupon-input {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .coupon-input input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        
+        .coupon-input button {
+            padding: 15px 30px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        .offers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .offer-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .offer-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .offer-card.gold {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+        }
+        
+        .offer-card.silver {
+            background: linear-gradient(135deg, #e5e7eb, #9ca3af);
+            color: white;
+        }
+        
+        .offer-card.purple {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+        }
+        
+        .offer-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .offer-tag {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #ef4444;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .offer-code {
+            background: rgba(0,0,0,0.1);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 18px;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin: 15px 0;
+        }
+        
+        .countdown-timer {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .timer-block {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 60px;
+        }
+        
+        .timer-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .timer-label {
+            font-size: 10px;
+        }
+        
+        .refer-section {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .refer-code {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 32px;
+            letter-spacing: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .share-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .share-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .share-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .share-btn.whatsapp { background: #25D366; }
+        .share-btn.facebook { background: #1877F2; }
+        .share-btn.twitter { background: #1DA1F2; }
+        .share-btn.copy { background: #6b7280; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="cleaners.html">Find Cleaners</a>
+            <a href="bookings.html">My Bookings</a>
+            <a href="offers.html" style="color: var(--primary);">Offers</a>
+            <span id="userName"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="offers-container">
+            <div class="offers-header">
+                <h1>Offers & Promotions</h1>
+                <p>Save big on your next service</p>
+            </div>
+
+            <!-- Coupon Input -->
+            <div class="coupon-input">
+                <input type="text" id="couponCode" placeholder="Enter coupon code">
+                <button onclick="applyCoupon()">Apply Coupon</button>
+            </div>
+
+            <!-- Active Offers Grid -->
+            <h2 style="color: white; margin: 30px 0;">🔥 Active Offers</h2>
+            <div class="offers-grid">
+                <div class="offer-card gold">
+                    <span class="offer-tag">LIMITED TIME</span>
+                    <h2>50% OFF</h2>
+                    <p>on your first deep cleaning</p>
+                    <div class="offer-code">WELCOME50</div>
+                    <p>Valid for new users only</p>
+                    <div class="countdown-timer">
+                        <div class="timer-block">
+                            <div class="timer-number" id="days">02</div>
+                            <div class="timer-label">Days</div>
+                        </div>
+                        <div class="timer-block">
+                            <div class="timer-number" id="hours">12</div>
+                            <div class="timer-label">Hours</div>
+                        </div>
+                        <div class="timer-block">
+                            <div class="timer-number" id="minutes">45</div>
+                            <div class="timer-label">Mins</div>
+                        </div>
+                        <div class="timer-block">
+                            <div class="timer-number" id="seconds">30</div>
+                            <div class="timer-label">Secs</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="copyCoupon('WELCOME50')">Copy Code</button>
+                </div>
+
+                <div class="offer-card silver">
+                    <span class="offer-tag">FLAT OFFER</span>
+                    <h2>₹300 OFF</h2>
+                    <p>on bookings above ₹1999</p>
+                    <div class="offer-code">FLAT300</div>
+                    <p>Valid on all services</p>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="copyCoupon('FLAT300')">Copy Code</button>
+                </div>
+
+                <div class="offer-card purple">
+                    <span class="offer-tag">FESTIVE OFFER</span>
+                    <h2>25% OFF</h2>
+                    <p>on AC service & repair</p>
+                    <div class="offer-code">SUMMER25</div>
+                    <p>Max discount ₹500</p>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="copyCoupon('SUMMER25')">Copy Code</button>
+                </div>
+
+                <div class="offer-card">
+                    <span class="offer-tag">SPECIAL</span>
+                    <h2>Buy 2 Get 1 Free</h2>
+                    <p>on plumbing services</p>
+                    <div class="offer-code">B2G1FREE</div>
+                    <p>Book 3 services, pay for 2</p>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="copyCoupon('B2G1FREE')">Copy Code</button>
+                </div>
+            </div>
+
+            <!-- Referral Section -->
+            <div class="refer-section">
+                <i class="fas fa-gift" style="font-size: 48px; color: #f59e0b; margin-bottom: 20px;"></i>
+                <h2>Refer & Earn</h2>
+                <p>Invite your friends and earn ₹200 for every successful referral</p>
+                
+                <div class="refer-code" id="referralCode">
+                    QUICK123
+                </div>
+                
+                <div class="share-buttons">
+                    <div class="share-btn whatsapp" onclick="share('whatsapp')">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <div class="share-btn facebook" onclick="share('facebook')">
+                        <i class="fab fa-facebook-f"></i>
+                    </div>
+                    <div class="share-btn twitter" onclick="share('twitter')">
+                        <i class="fab fa-twitter"></i>
+                    </div>
+                    <div class="share-btn copy" onclick="copyReferral()">
+                        <i class="fas fa-copy"></i>
+                    </div>
+                </div>
+                
+                <p style="margin-top: 20px; color: #6b7280;">Your friends get ₹100 off on first booking</p>
+            </div>
+
+            <!-- Terms & Conditions -->
+            <div style="background: white; padding: 30px; border-radius: 20px;">
+                <h3>Terms & Conditions</h3>
+                <ul style="margin-top: 15px; color: #6b7280;">
+                    <li>Offers cannot be combined with other promotions</li>
+                    <li>Valid on minimum booking amount of ₹499</li>
+                    <li>One coupon per customer</li>
+                    <li>Valid only for services in select cities</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        if (!auth.isAuthenticated()) {
+            window.location.href = '../login.html';
+        }
+
+        document.getElementById('userName').textContent = auth.currentUser.name;
+
+        // Countdown Timer
+        function startCountdown() {
+            let totalSeconds = 172800; // 2 days in seconds
+            
+            const timer = setInterval(() => {
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                
+                document.getElementById('days').textContent = String(days).padStart(2, '0');
+                document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+                
+                if (totalSeconds <= 0) {
+                    clearInterval(timer);
+                }
+                totalSeconds--;
+            }, 1000);
+        }
+
+        startCountdown();
+
+        function applyCoupon() {
+            const code = document.getElementById('couponCode').value;
+            if (code) {
+                alert(`Coupon ${code} applied successfully!`);
+            } else {
+                alert('Please enter a coupon code');
+            }
+        }
+
+        function copyCoupon(code) {
+            navigator.clipboard.writeText(code);
+            alert('Coupon code copied!');
+        }
+
+        function copyReferral() {
+            const code = document.getElementById('referralCode').textContent;
+            navigator.clipboard.writeText(code);
+            alert('Referral code copied!');
+        }
+
+        function share(platform) {
+            const text = 'Use my referral code QUICK123 to get ₹100 off on Quickbit!';
+            const url = 'https://quickbit.com';
+            
+            let shareUrl = '';
+            
+            switch(platform) {
+                case 'whatsapp':
+                    shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                    break;
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+                    break;
+            }
+            
+            window.open(shareUrl, '_blank');
+        }
+
+        function logout() {
+            auth.logout();
+        }
+    </script>
+</body>
+</html>

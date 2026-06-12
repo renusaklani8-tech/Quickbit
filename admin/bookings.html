@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bookings - Admin</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .booking-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 5px solid;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .booking-pending { border-left-color: #f59e0b; }
+        .booking-confirmed { border-left-color: #3b82f6; }
+        .booking-completed { border-left-color: #10b981; }
+        .booking-cancelled { border-left-color: #ef4444; }
+        
+        .booking-info h3 {
+            margin-bottom: 5px;
+        }
+        
+        .booking-meta {
+            display: flex;
+            gap: 20px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .amount-badge {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .date-range {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .date-range input {
+            padding: 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <i class="fas fa-shield-alt" style="color: #ef4444; font-size: 24px;"></i>
+            <h2>Quickbit Admin</h2>
+        </div>
+        <div class="admin-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="users.html">Users</a>
+            <a href="workers.html">Workers</a>
+            <a href="bookings.html" class="active">Bookings</a>
+            <a href="reports.html">Reports</a>
+        </div>
+        <div>
+            <span>Admin</span>
+            <button class="btn btn-outline" style="margin-left: 20px;" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Booking Management</h1>
+            <div>
+                <button class="export-btn" style="margin-right: 10px;" onclick="exportBookings()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-primary" onclick="generateReport()">
+                    <i class="fas fa-chart-bar"></i> Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <i class="fas fa-calendar"></i>
+                <div class="stat-value" id="totalBookings">0</div>
+                <p>Total Bookings</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-clock"></i>
+                <div class="stat-value" id="pendingBookings">0</div>
+                <p>Pending</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle"></i>
+                <div class="stat-value" id="completedBookings">0</div>
+                <p>Completed</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-rupee-sign"></i>
+                <div class="stat-value" id="totalRevenue">₹0</div>
+                <p>Revenue</p>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="search-section">
+            <div class="date-range">
+                <input type="date" id="startDate" placeholder="Start Date">
+                <span>to</span>
+                <input type="date" id="endDate" placeholder="End Date">
+                <button class="btn btn-primary" onclick="filterByDate()">Apply</button>
+            </div>
+            <select class="filter-select" id="statusFilter" onchange="filterBookings()">
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+
+        <!-- Bookings List -->
+        <div id="bookingsList"></div>
+    </div>
+
+    <script>
+        if (localStorage.getItem('adminAuth') !== 'true') {
+            window.location.href = 'index.html';
+        }
+
+        let allBookings = [];
+
+        window.onload = function() {
+            loadBookings();
+        };
+
+        function loadBookings() {
+            const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            allBookings = bookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            updateStats();
+            displayBookings();
+        }
+
+        function updateStats() {
+            const total = allBookings.length;
+            const pending = allBookings.filter(b => b.status === 'pending').length;
+            const completed = allBookings.filter(b => b.status === 'completed').length;
+            const revenue = allBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+
+            document.getElementById('totalBookings').textContent = total;
+            document.getElementById('pendingBookings').textContent = pending;
+            document.getElementById('completedBookings').textContent = completed;
+            document.getElementById('totalRevenue').textContent = '₹' + revenue;
+        }
+
+        function displayBookings(filtered = allBookings) {
+            const container = document.getElementById('bookingsList');
+            
+            container.innerHTML = filtered.map(booking => `
+                <div class="booking-card booking-${booking.status}">
+                    <div class="booking-info">
+                        <h3>${booking.service?.name || 'Service'}</h3>
+                        <div class="booking-meta">
+                            <span><i class="fas fa-user"></i> ${booking.userName}</span>
+                            <span><i class="fas fa-briefcase"></i> ${booking.workerName || 'Not assigned'}</span>
+                            <span><i class="fas fa-calendar"></i> ${booking.date || 'TBD'}</span>
+                            <span><i class="fas fa-clock"></i> ${booking.timeSlot || 'TBD'}</span>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="amount-badge">₹${booking.totalAmount || 0}</span>
+                        <p style="margin-top: 5px;">
+                            <span class="status-badge status-${booking.status}">${booking.status}</span>
+                        </p>
+                        <div style="margin-top: 10px;">
+                            <button class="action-btn view" onclick="viewBooking('${booking.id}')">View</button>
+                            <button class="action-btn edit" onclick="updateBooking('${booking.id}')">Update</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('') || '<p style="text-align: center; padding: 40px;">No bookings found</p>';
+        }
+
+        function filterBookings() {
+            const status = document.getElementById('statusFilter').value;
+            if (status === 'all') {
+                displayBookings(allBookings);
+            } else {
+                const filtered = allBookings.filter(b => b.status === status);
+                displayBookings(filtered);
+            }
+        }
+
+        function filterByDate() {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            
+            if (start && end) {
+                const filtered = allBookings.filter(b => 
+                    b.date >= start && b.date <= end
+                );
+                displayBookings(filtered);
+            }
+        }
+
+        function viewBooking(id) {
+            const booking = allBookings.find(b => b.id === id);
+            alert(JSON.stringify(booking, null, 2));
+        }
+
+        function updateBooking(id) {
+            const newStatus = prompt('Enter new status (pending/confirmed/in-progress/completed/cancelled):');
+            if (newStatus) {
+                let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+                const index = bookings.findIndex(b => b.id === id);
+                if (index !== -1) {
+                    bookings[index].status = newStatus;
+                    localStorage.setItem('bookings', JSON.stringify(bookings));
+                    loadBookings();
+                    alert('Booking updated');
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminAuth');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

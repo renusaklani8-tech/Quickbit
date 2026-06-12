@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Quickbit</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .profile-container {
+            max-width: 1000px;
+            margin: 30px auto;
+        }
+        
+        .profile-header {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            margin: 0 auto 20px;
+        }
+        
+        .edit-avatar {
+            position: absolute;
+            bottom: 0;
+            right: 50%;
+            transform: translateX(50%);
+            background: var(--primary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .profile-tabs {
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .profile-tab {
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .profile-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .profile-section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+        
+        .info-row {
+            display: flex;
+            margin: 15px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .info-label {
+            width: 150px;
+            color: var(--gray);
+        }
+        
+        .info-value {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .edit-input {
+            padding: 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .address-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .address-card.default {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+        
+        .default-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .payment-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            margin: 15px 0;
+        }
+        
+        .card-icon {
+            font-size: 32px;
+        }
+        
+        .preferences-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .preference-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="cleaners.html">Find Cleaners</a>
+            <a href="bookings.html">My Bookings</a>
+            <a href="user-profile.html" style="color: var(--primary);">Profile</a>
+            <span id="userName"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="profile-container">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">
+                    <span id="avatarInitial"></span>
+                </div>
+                <div class="edit-avatar" onclick="editAvatar()">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <h2 id="profileName"></h2>
+                <p id="profileEmail" style="color: var(--gray);"></p>
+                <p>Member since <span id="memberSince"></span></p>
+            </div>
+            
+            <!-- Profile Tabs -->
+            <div class="profile-tabs">
+                <div class="profile-tab active" onclick="switchProfileTab('personal')">Personal Info</div>
+                <div class="profile-tab" onclick="switchProfileTab('addresses')">Addresses</div>
+                <div class="profile-tab" onclick="switchProfileTab('payments')">Payment Methods</div>
+                <div class="profile-tab" onclick="switchProfileTab('preferences')">Preferences</div>
+                <div class="profile-tab" onclick="switchProfileTab('security')">Security</div>
+            </div>
+            
+            <!-- Personal Info Tab -->
+            <div id="personalTab" class="profile-section">
+                <div style="display: flex; justify-content: space-between;">
+                    <h3>Personal Information</h3>
+                    <button class="btn btn-outline" onclick="toggleEdit()" id="editBtn">Edit Profile</button>
+                </div>
+                
+                <div id="infoDisplay">
+                    <div class="info-row">
+                        <span class="info-label">Full Name</span>
+                        <span class="info-value" id="displayName"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Email Address</span>
+                        <span class="info-value" id="displayEmail"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Phone Number</span>
+                        <span class="info-value" id="displayPhone"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Date of Birth</span>
+                        <span class="info-value" id="displayDob">Not set</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Gender</span>
+                        <span class="info-value" id="displayGender">Not set</span>
+                    </div>
+                </div>
+                
+                <div id="infoEdit" style="display: none;">
+                    <div class="info-row">
+                        <span class="info-label">Full Name</span>
+                        <input type="text" class="edit-input" id="editName" value="">
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <input type="email" class="edit-input" id="editEmail" value="" readonly>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Phone</span>
+                        <input type="tel" class="edit-input" id="editPhone" value="">
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Date of Birth</span>
+                        <input type="date" class="edit-input" id="editDob">
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Gender</span>
+                        <select class="edit-input" id="editGender">
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+                </div>
+            </div>
+            
+            <!-- Addresses Tab -->
+            <div id="addressesTab" class="profile-section" style="display: none;">
+                <div style="display: flex; justify-content: space-between;">
+                    <h3>Saved Addresses</h3>
+                    <button class="btn btn-primary" onclick="addAddress()">+ Add New Address</button>
+                </div>
+                
+                <div id="addressesList"></div>
+                
+                <!-- Add Address Form -->
+                <div id="addAddressForm" style="display: none; margin-top: 20px;">
+                    <h4>Add New Address</h4>
+                    <input type="text" class="edit-input" id="addressLine1" placeholder="Address Line 1" style="margin: 10px 0;">
+                    <input type="text" class="edit-input" id="addressLine2" placeholder="Address Line 2" style="margin: 10px 0;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <input type="text" class="edit-input" id="addressCity" placeholder="City">
+                        <input type="text" class="edit-input" id="addressState" placeholder="State">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0;">
+                        <input type="text" class="edit-input" id="addressPincode" placeholder="Pincode">
+                        <input type="text" class="edit-input" id="addressType" placeholder="Type (Home/Office)">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveAddress()">Save Address</button>
+                </div>
+            </div>
+            
+            <!-- Payment Methods Tab -->
+            <div id="paymentsTab" class="profile-section" style="display: none;">
+                <div style="display: flex; justify-content: space-between;">
+                    <h3>Payment Methods</h3>
+                    <button class="btn btn-primary" onclick="addPaymentMethod()">+ Add Payment Method</button>
+                </div>
+                
+                <div id="paymentMethodsList"></div>
+            </div>
+            
+            <!-- Preferences Tab -->
+            <div id="preferencesTab" class="profile-section" style="display: none;">
+                <h3>Notification Preferences</h3>
+                
+                <div class="preferences-grid">
+                    <div class="preference-item">
+                        <label class="switch">
+                            <input type="checkbox" id="emailNotif" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Email Notifications</span>
+                    </div>
+                    
+                    <div class="preference-item">
+                        <label class="switch">
+                            <input type="checkbox" id="smsNotif" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>SMS Notifications</span>
+                    </div>
+                    
+                    <div class="preference-item">
+                        <label class="switch">
+                            <input type="checkbox" id="pushNotif" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Push Notifications</span>
+                    </div>
+                    
+                    <div class="preference-item">
+                        <label class="switch">
+                            <input type="checkbox" id="marketingEmails">
+                            <span class="slider"></span>
+                        </label>
+                        <span>Marketing Emails</span>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">Language Preferences</h3>
+                <select class="edit-input" style="width: 200px; margin: 10px 0;">
+                    <option>English</option>
+                    <option>Hindi</option>
+                    <option>Bengali</option>
+                    <option>Tamil</option>
+                </select>
+                
+                <button class="btn btn-primary" style="margin-top: 20px;" onclick="savePreferences()">Save Preferences</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        let isEditing = false;
+        
+        // Check authentication
+        if (!auth.isAuthenticated()) {
+            window.location.href = '../login.html';
+        }
+        
+        const user = auth.currentUser;
+        
+        // Load profile data
+        window.onload = function() {
+            loadProfile();
+            loadAddresses();
+            loadPaymentMethods();
+        };
+        
+        function loadProfile() {
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('profileName').textContent = user.name;
+            document.getElementById('profileEmail').textContent = user.email;
+            document.getElementById('avatarInitial').textContent = user.name.charAt(0);
+            
+            // Load saved profile data
+            const profile = JSON.parse(localStorage.getItem('profile_' + user.id)) || {};
+            
+            document.getElementById('displayName').textContent = profile.name || user.name;
+            document.getElementById('displayEmail').textContent = user.email;
+            document.getElementById('displayPhone').textContent = profile.phone || user.phone || 'Not set';
+            document.getElementById('displayDob').textContent = profile.dob || 'Not set';
+            document.getElementById('displayGender').textContent = profile.gender || 'Not set';
+            
+            document.getElementById('memberSince').textContent = new Date(user.createdAt).toLocaleDateString();
+            
+            // Set edit form values
+            document.getElementById('editName').value = profile.name || user.name;
+            document.getElementById('editEmail').value = user.email;
+            document.getElementById('editPhone').value = profile.phone || user.phone || '';
+            document.getElementById('editDob').value = profile.dob || '';
+            document.getElementById('editGender').value = profile.gender || '';
+        }
+        
+        function toggleEdit() {
+            isEditing = !isEditing;
+            document.getElementById('infoDisplay').style.display = isEditing ? 'none' : 'block';
+            document.getElementById('infoEdit').style.display = isEditing ? 'block' : 'none';
+            document.getElementById('editBtn').textContent = isEditing ? 'Cancel' : 'Edit Profile';
+        }
+        
+        function saveProfile() {
+            const profileData = {
+                name: document.getElementById('editName').value,
+                phone: document.getElementById('editPhone').value,
+                dob: document.getElementById('editDob').value,
+                gender: document.getElementById('editGender').value
+            };
+            
+            localStorage.setItem('profile_' + user.id, JSON.stringify(profileData));
+            
+            // Update user name in users list
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = users.findIndex(u => u.id === user.id);
+            if (userIndex !== -1) {
+                users[userIndex].name = profileData.name;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            
+            loadProfile();
+            toggleEdit();
+            alert('Profile updated successfully!');
+        }
+        
+        function switchProfileTab(tab) {
+            document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('personalTab').style.display = 'none';
+            document.getElementById('addressesTab').style.display = 'none';
+            document.getElementById('paymentsTab').style.display = 'none';
+            document.getElementById('preferencesTab').style.display = 'none';
+            
+            document.getElementById(tab + 'Tab').style.display = 'block';
+        }
+        
+        function addAddress() {
+            document.getElementById('addAddressForm').style.display = 'block';
+        }
+        
+        function saveAddress() {
+            const address = {
+                id: Date.now(),
+                line1: document.getElementById('addressLine1').value,
+                line2: document.getElementById('addressLine2').value,
+                city: document.getElementById('addressCity').value,
+                state: document.getElementById('addressState').value,
+                pincode: document.getElementById('addressPincode').value,
+                type: document.getElementById('addressType').value,
+                isDefault: false
+            };
+            
+            let addresses = JSON.parse(localStorage.getItem('addresses_' + user.id)) || [];
+            addresses.push(address);
+            localStorage.setItem('addresses_' + user.id, JSON.stringify(addresses));
+            
+            document.getElementById('addAddressForm').style.display = 'none';
+            loadAddresses();
+        }
+        
+        function loadAddresses() {
+            const addresses = JSON.parse(localStorage.getItem('addresses_' + user.id)) || [];
+            const container = document.getElementById('addressesList');
+            
+            if (addresses.length === 0) {
+                container.innerHTML = '<p style="color: var(--gray);">No addresses saved</p>';
+                return;
+            }
+            
+            container.innerHTML = addresses.map(addr => `
+                <div class="address-card ${addr.isDefault ? 'default' : ''}">
+                    ${addr.isDefault ? '<span class="default-badge">Default</span>' : ''}
+                    <h4>${addr.type || 'Address'}</h4>
+                    <p>${addr.line1}</p>
+                    <p>${addr.line2}</p>
+                    <p>${addr.city}, ${addr.state} - ${addr.pincode}</p>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-outline" onclick="setDefaultAddress('${addr.id}')">Set Default</button>
+                        <button class="btn btn-outline" onclick="deleteAddress('${addr.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function addPaymentMethod() {
+            alert('Add payment method - Integrate with Razorpay/Stripe');
+        }
+        
+        function loadPaymentMethods() {
+            const container = document.getElementById('paymentMethodsList');
+            container.innerHTML = `
+                <div class="payment-card">
+                    <div class="card-icon">
+                        <i class="fab fa-cc-visa" style="color: #1a1f71;"></i>
+                    </div>
+                    <div>
+                        <h4>VISA **** 4242</h4>
+                        <p>Expires 12/25</p>
+                    </div>
+                    <div style="margin-left: auto;">
+                        <button class="btn btn-outline">Remove</button>
+                    </div>
+                </div>
+                <div class="payment-card">
+                    <div class="card-icon">
+                        <i class="fas fa-mobile-alt" style="color: var(--primary);"></i>
+                    </div>
+                    <div>
+                        <h4>UPI ID</h4>
+                        <p>user@okhdfcbank</p>
+                    </div>
+                    <div style="margin-left: auto;">
+                        <button class="btn btn-outline">Remove</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function savePreferences() {
+            alert('Preferences saved!');
+        }
+        
+        function editAvatar() {
+            alert('Change profile picture - Implement file upload');
+        }
+        
+        function logout() {
+            auth.logout();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!-- pages/notifications.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Quickbit</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .notifications-container {
+            max-width: 800px;
+            margin: 30px auto;
+        }
+        
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            color: white;
+        }
+        
+        .notif-settings {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .notification-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+            border-left: 5px solid transparent;
+            cursor: pointer;
+        }
+        
+        .notification-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .notification-item.unread {
+            background: #f0f9ff;
+            border-left-color: #2563eb;
+        }
+        
+        .notification-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .icon-booking { background: #dbeafe; color: #1e40af; }
+        .icon-payment { background: #d1fae5; color: #065f46; }
+        .icon-review { background: #fef3c7; color: #92400e; }
+        .icon-system { background: #e0e7ff; color: #3730a3; }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .notification-message {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .notification-time {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .notif-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .mark-read {
+            color: #2563eb;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .delete-notif {
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 15px;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            color: #e5e7eb;
+            margin-bottom: 20px;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .filter-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .filter-tab.active {
+            background: #2563eb;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="../dashboard.html" class="logo">Quickbit<span>.</span></a>
+        <nav class="nav-links">
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="cleaners.html">Find Cleaners</a>
+            <a href="bookings.html">My Bookings</a>
+            <a href="notifications.html" style="color: var(--primary);">Notifications</a>
+            <span id="userName"></span>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="notifications-container">
+            <div class="notifications-header">
+                <h1>Notifications</h1>
+                <button class="btn btn-outline" onclick="markAllAsRead()">
+                    <i class="fas fa-check-double"></i> Mark all read
+                </button>
+            </div>
+
+            <!-- Settings Toggle -->
+            <div class="notif-settings">
+                <h3>Notification Settings</h3>
+                <div class="setting-item">
+                    <div>
+                        <strong>Booking Updates</strong>
+                        <p style="color: #6b7280; font-size: 14px;">Get notified about booking status</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="bookingNotif" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div>
+                        <strong>Payment Alerts</strong>
+                        <p style="color: #6b7280; font-size: 14px;">Payment confirmations and receipts</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="paymentNotif" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div>
+                        <strong>Promotions & Offers</strong>
+                        <p style="color: #6b7280; font-size: 14px;">Special deals and discounts</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="promoNotif">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div>
+                        <strong>Email Notifications</strong>
+                        <p style="color: #6b7280; font-size: 14px;">Receive notifications via email</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="emailNotif" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <div class="filter-tab active" onclick="filterNotifs('all')">All</div>
+                <div class="filter-tab" onclick="filterNotifs('unread')">Unread</div>
+                <div class="filter-tab" onclick="filterNotifs('bookings')">Bookings</div>
+                <div class="filter-tab" onclick="filterNotifs('payments')">Payments</div>
+            </div>
+
+            <!-- Notifications List -->
+            <div id="notificationsList"></div>
+        </div>
+    </main>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        let notifications = [];
+
+        if (!auth.isAuthenticated()) {
+            window.location.href = '../login.html';
+        }
+
+        document.getElementById('userName').textContent = auth.currentUser.name;
+
+        window.onload = function() {
+            loadNotifications();
+            loadSettings();
+        };
+
+        function loadNotifications() {
+            notifications = [
+                {
+                    id: 1,
+                    type: 'booking',
+                    title: 'Booking Confirmed',
+                    message: 'Your deep cleaning service has been confirmed for tomorrow at 10 AM',
+                    time: '5 minutes ago',
+                    read: false,
+                    icon: 'fa-calendar-check'
+                },
+                {
+                    id: 2,
+                    type: 'payment',
+                    title: 'Payment Received',
+                    message: 'You received ₹1,200 for completing a cleaning job',
+                    time: '1 hour ago',
+                    read: false,
+                    icon: 'fa-rupee-sign'
+                },
+                {
+                    id: 3,
+                    type: 'review',
+                    title: 'New Review',
+                    message: 'Priya rated your service 5 stars! "Excellent work!"',
+                    time: '3 hours ago',
+                    read: true,
+                    icon: 'fa-star'
+                },
+                {
+                    id: 4,
+                    type: 'booking',
+                    title: 'Reminder',
+                    message: 'You have a booking tomorrow at 2 PM with Rahul',
+                    time: '5 hours ago',
+                    read: true,
+                    icon: 'fa-clock'
+                },
+                {
+                    id: 5,
+                    type: 'system',
+                    title: 'Profile Updated',
+                    message: 'Your profile information was successfully updated',
+                    time: 'Yesterday',
+                    read: true,
+                    icon: 'fa-user-check'
+                }
+            ];
+
+            displayNotifications(notifications);
+        }
+
+        function displayNotifications(notifs) {
+            const container = document.getElementById('notificationsList');
+            
+            if (notifs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell-slash"></i>
+                        <h3>No Notifications</h3>
+                        <p>You're all caught up!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifs.map(notif => `
+                <div class="notification-item ${notif.read ? '' : 'unread'}" onclick="markAsRead(${notif.id})">
+                    <div class="notification-icon icon-${notif.type}">
+                        <i class="fas ${notif.icon}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${notif.title}</div>
+                        <div class="notification-message">${notif.message}</div>
+                        <div class="notification-time">${notif.time}</div>
+                    </div>
+                    <div class="notif-actions">
+                        ${!notif.read ? '<span class="mark-read" onclick="event.stopPropagation(); markAsRead('+notif.id+')">Mark read</span>' : ''}
+                        <span class="delete-notif" onclick="event.stopPropagation(); deleteNotification(${notif.id})">Delete</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterNotifs(filter) {
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            let filtered = [];
+            if (filter === 'all') {
+                filtered = notifications;
+            } else if (filter === 'unread') {
+                filtered = notifications.filter(n => !n.read);
+            } else if (filter === 'bookings') {
+                filtered = notifications.filter(n => n.type === 'booking');
+            } else if (filter === 'payments') {
+                filtered = notifications.filter(n => n.type === 'payment');
+            }
+
+            displayNotifications(filtered);
+        }
+
+        function markAsRead(id) {
+            const notif = notifications.find(n => n.id === id);
+            if (notif) {
+                notif.read = true;
+                displayNotifications(notifications);
+            }
+        }
+
+        function markAllAsRead() {
+            notifications.forEach(n => n.read = true);
+            displayNotifications(notifications);
+        }
+
+        function deleteNotification(id) {
+            notifications = notifications.filter(n => n.id !== id);
+            displayNotifications(notifications);
+        }
+
+        function loadSettings() {
+            // Load saved settings from localStorage
+            const settings = JSON.parse(localStorage.getItem('notifSettings')) || {
+                booking: true,
+                payment: true,
+                promo: false,
+                email: true
+            };
+
+            document.getElementById('bookingNotif').checked = settings.booking;
+            document.getElementById('paymentNotif').checked = settings.payment;
+            document.getElementById('promoNotif').checked = settings.promo;
+            document.getElementById('emailNotif').checked = settings.email;
+
+            // Save on change
+            document.querySelectorAll('.switch input').forEach(input => {
+                input.addEventListener('change', saveSettings);
+            });
+        }
+
+        function saveSettings() {
+            const settings = {
+                booking: document.getElementById('bookingNotif').checked,
+                payment: document.getElementById('paymentNotif').checked,
+                promo: document.getElementById('promoNotif').checked,
+                email: document.getElementById('emailNotif').checked
+            };
+            localStorage.setItem('notifSettings', JSON.stringify(settings));
+        }
+
+        function logout() {
+            auth.logout();
+        }
+    </script>
+</body>
+</html>
